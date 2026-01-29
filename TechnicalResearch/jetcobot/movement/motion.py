@@ -1,4 +1,3 @@
-# motion.py
 import time
 import json
 import os
