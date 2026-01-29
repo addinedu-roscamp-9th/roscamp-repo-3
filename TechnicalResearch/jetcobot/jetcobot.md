@@ -18,7 +18,6 @@ python3 -m venv .venv
 가상환경 활성화:
 
 > `source`대신에 `.` 사용
-> 가상환경의 이름은 현재 경로의 이름과 같다
 
 ```sh
 . .venv/bin/activate
