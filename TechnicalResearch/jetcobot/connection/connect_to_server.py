@@ -1,6 +1,12 @@
+import json
+
 import requests
 
-SERVER_URL = "http://192.168.0.56:8000"
+with open("./config.json", encoding="UTF-8") as file:
+    config = json.load(file)
+
+
+SERVER_URL = config["server_url"]
 
 
 def connect_to_server():
