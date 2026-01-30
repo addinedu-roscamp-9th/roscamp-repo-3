@@ -76,7 +76,7 @@ osrf-pycommon==2.1.5
 packaging==24.2
 pcl-msgs==1.0.0
 pendulum-msgs==0.33.5
-pymycobot==3.9.2
+pymycobot==4.0.3
 pyserial==3.5
 python-can==4.5.0
 python-qt-binding==2.2.1
