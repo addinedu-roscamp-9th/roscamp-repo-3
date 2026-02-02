@@ -1,6 +1,7 @@
+from fastapi import APIRouter
+
 from app.models.robot_model import RobotData
 from app.services import jetcobot_service
-from fastapi import APIRouter
 
 router = APIRouter()
 
