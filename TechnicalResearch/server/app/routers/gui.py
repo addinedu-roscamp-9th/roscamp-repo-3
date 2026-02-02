@@ -5,8 +5,6 @@ from app.services import gui_service
 
 router = APIRouter()
 
-gui_connections: list = []
-
 
 # http://192.168.5.10:8000/gui
 @router.post("")

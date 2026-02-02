@@ -4,6 +4,6 @@ from pydantic import BaseModel
 
 
 @dataclass
-class RobotData(BaseModel):
+class JetcobotData(BaseModel):
     robot_id: int
     status: str
