@@ -16,7 +16,7 @@ def connect_to_server():
     try:
         response = requests.post(
             f"{SERVER_URL}/jetcobot",
-            json=data.__dict__,   # convert data into dict
+            json=data.__dict__,  # convert data into dict
             timeout=5,
         )
         print("status:", response.status_code)
