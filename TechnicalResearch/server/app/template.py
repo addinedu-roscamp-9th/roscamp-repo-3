@@ -10,10 +10,13 @@ from sqlalchemy import (
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-# -----------------------
-# MySQL 연결
-# -----------------------
+# connect to db
 DATABASE_URL = "mysql+pymysql://user:password@localhost:3306/robot_db"
+
+# db name : debugcrew
+# username: debugcrew
+# pw      : debug_crew_1234
+# DATABASE_URL = "mysql+pymysql://debugcrew:debug_crew_1234@localhost:3306/debugcrew"
 
 engine = create_engine(DATABASE_URL, echo=False)
 SessionLocal = sessionmaker(bind=engine)
