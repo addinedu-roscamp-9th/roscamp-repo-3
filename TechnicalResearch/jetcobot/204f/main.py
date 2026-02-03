@@ -1,12 +1,7 @@
-import json
-
 import requests
 from models.jetcobot_model import JetcobotData
 
-with open("./config.json", encoding="UTF-8") as file:
-    config = json.load(file)
-
-SERVER_URL = config["server_url"]
+SERVER_URL = "http://192.168.5.10:8000"
 
 
 def connect_to_server():
