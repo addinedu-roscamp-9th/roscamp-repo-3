@@ -8,7 +8,7 @@ class RobotsData(BaseModel):
     robot_name: str
 
 
-class PosturesData(BaseMOdel):
+class PosturesData(BaseModel):
     pos_id: str
     pos_name: str
     j1: float
