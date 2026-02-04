@@ -17,5 +17,5 @@ class PosturesData(BaseModel):
     j4: float
     j5: float
     j6: float
-    angle: float
+    angle: int
     gap: int
