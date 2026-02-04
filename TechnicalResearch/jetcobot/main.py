@@ -1,13 +1,17 @@
+import os
+
+from dotenv import load_dotenv
+
 from app.controller.movement import Move
 from app.model.model import PosturesData
 from app.service.connect import Connect
 
-# on hotspot
-GATEWAY_HOST = "172.20.10.4"
-GATEWAY_PORT = 8000
-ENDPOINT = "jetcobot"
+# Load environment variables from .env file
+load_dotenv()
 
-INITIAL_ANGLES = [0, 0, 0, 0, 0, 0]
+GATEWAY_HOST = os.getenv("GATEWAY_HOST", "192.168.0.22")
+GATEWAY_PORT = int(os.getenv("GATEWAY_PORT", 8000))
+ENDPOINT = os.getenv("ENDPOINT", "jetcobot")
 SPEED = 30
 
 
@@ -22,7 +26,7 @@ def main():
         print("Failed to connect to server")
         return
 
-    # Parse response into PosturesData
+    # Parse response into PosturesData (response is already a dict from response.json())
     posture = PosturesData(**response)
     print(f"Received posture: {posture}")
 

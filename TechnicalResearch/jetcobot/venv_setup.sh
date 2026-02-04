@@ -11,6 +11,7 @@ pip_packages=(
   "numpy==2.4.2"
   "pydantic==2.12.5"
   "requests==2.32.5"
+  "doeenv==0.9.9"
 )
 
 # create venv if not already created

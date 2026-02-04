@@ -1,7 +1,34 @@
 # Jetcobot
 
-- [Environment](#environment)
+- [Dot Env](#dot-env)
 - [Dependency](#dependency)
+- [Environment](#environment)
+
+---
+
+## Dot Env
+
+Create `.env` file at same path as `main.py`
+
+```sh
+touch .env
+```
+
+Add the following inside the `.env`:
+
+```sh
+GATEWAY_HOST=192.168.0.56
+GATEWAY_PORT=8000
+ENDPOINT=jetcobot
+```
+
+> Change the `GATEWAY_HOST` value as you needed
+
+Or with echo command:
+
+```sh
+echo -e 'GATEWAY_HOST=192.168.0.56\nGATEWAY_PORT=8000\nENDPOINT=jetcobot' >> .env
+```
 
 ---
 
