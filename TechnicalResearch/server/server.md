@@ -23,6 +23,28 @@ project/
 
 ---
 
+## Dependencies
+
+If reading from `requirements.txt` doesn't work install it manullay
+
+### PIP
+
+install with pip
+
+```sh
+pip install uvicorn fastapi pyyaml numpy sqlalchemy
+```
+
+### APT
+
+- ros2-jazzy-nav2-msgs
+
+```sh
+sudo apt install ros2-jazzy-nav2-msgs
+```
+
+---
+
 ## Environments
 
 Create new venv:
