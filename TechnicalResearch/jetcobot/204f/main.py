@@ -7,8 +7,10 @@ import cv2
 import requests
 from models.jetcobot_model import RobotsData
 
-GATEWAY_URL = "http://127.0.0.1:9000"
-AI_SERVER_HOST = "localhost"
+GATEWAY_HOST = "http://192.168.0.56"
+GATEWAY_PORT = 8000
+
+AI_SERVER_HOST = "192.168.0.56"
 AI_SERVER_PORT = 9000
 
 
@@ -22,7 +24,7 @@ def connect_to_gateway():
 
     try:
         response = requests.post(
-            f"{GATEWAY_URL}/jetcobot",
+            f"{GATEWAY_HOST}:{GATEWAY_PORT}/jetcobot",
             json=data.model_dump(),
             timeout=5,
         )
