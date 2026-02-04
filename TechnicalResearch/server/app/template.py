@@ -13,10 +13,10 @@ from sqlalchemy.orm import sessionmaker
 # connect to db
 DATABASE_URL = "mysql+pymysql://user:password@localhost:3306/robot_db"
 
-# db name : debugcrew
+# db name : home_ai
 # username: debugcrew
-# pw      : debug_crew_1234
-# DATABASE_URL = "mysql+pymysql://debugcrew:debug_crew_1234@localhost:3306/debugcrew"
+# pw      : 1234
+# DATABASE_URL = "mysql+pymysql://debugcrew:1234@localhost:3306/home_ai"
 
 engine = create_engine(DATABASE_URL, echo=False)
 SessionLocal = sessionmaker(bind=engine)
