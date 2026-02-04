@@ -72,6 +72,7 @@ nav-msgs==5.3.6
 nav2-common==1.3.10
 nav2-msgs==1.3.10
 nav2-simple-commander==1.0.0
+numpy==2.4.2
 osrf-pycommon==2.1.7
 pal-statistics==2.7.0
 pal-statistics-msgs==2.7.0
