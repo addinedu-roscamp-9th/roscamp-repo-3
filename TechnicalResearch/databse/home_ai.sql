@@ -1,6 +1,5 @@
--- db name: debugcrew
 -- user name: debugcrew
--- pw: debug_crew_1234
+-- pw: 1234
 
 use home_ai;
 
