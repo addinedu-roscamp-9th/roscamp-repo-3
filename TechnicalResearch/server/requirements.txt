@@ -19,6 +19,7 @@ angles==1.16.1
 annotated-doc==0.0.4
 annotated-types==0.7.0
 anyio==4.12.1
+aruco-nav==0.0.0
 bond==4.1.2
 builtin-interfaces==2.0.3
 click==8.3.1
@@ -31,6 +32,7 @@ demo-nodes-py==0.33.9
 diagnostic-msgs==5.3.6
 diagnostic-updater==4.2.6
 domain-coordinator==0.12.0
+dotenv==0.9.9
 dwb-msgs==1.3.10
 example-interfaces==0.12.0
 examples-rclpy-executors==0.19.7
@@ -63,9 +65,6 @@ lifecycle-msgs==2.0.3
 logging-demo==0.33.9
 map-msgs==2.4.1
 message-filters==4.11.10
-multipart==1.3.0
-my-first-package==0.0.0
-my-first-package-msgs==0.0.0
 nav-2d-msgs==1.3.10
 nav-msgs==5.3.6
 nav2-common==1.3.10
@@ -78,6 +77,7 @@ pcl-msgs==1.0.0
 pendulum-msgs==0.33.9
 pinky-bringup==0.0.0
 pinky-emotion==0.0.0
+pinky-gui==0.0.0
 pinky-interfaces==0.0.0
 pinky-led==0.0.0
 pydantic==2.12.5
