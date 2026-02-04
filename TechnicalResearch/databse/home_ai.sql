@@ -2,7 +2,7 @@
 -- user name: debugcrew
 -- pw: debug_crew_1234
 
-use debugcrew;
+use home_ai;
 
 drop table if exists logs;
 drop table if exists schedules;
