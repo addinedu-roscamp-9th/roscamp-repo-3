@@ -15,61 +15,26 @@ project/
 │   ├── services/    ← Business logic
 │   └── models/      ← Data structures (Pydantic)
 ├── main.py          ← App entry point
-├── run.py           ← Server runner
-├── config.py        ← Settings
-├── requirements.txt
-└── .env             ← Environment variables (not in git)
-```
-
----
-
-## Dependencies
-
-If reading from `requirements.txt` doesn't work install it manullay
-
-### PIP
-
-install with pip
-
-```sh
-pip install uvicorn fastapi pyyaml numpy sqlalchemy jinja2 setuptools typeguard
-```
-
-### APT
-
-- ros2-jazzy-nav2-msgs
-
-```sh
-sudo apt install ros-jazzy-nav2-msgs
+└── requirements.txt
 ```
 
 ---
 
 ## Environments
 
-Create new venv:
+Source the `venv_setup.sh` script to effect the current shell:
 
 ```sh
-python3 -m venv .venv
+source ./venv_setup.sh
 ```
 
-Activate venv:
+1. Create venv named `.venv`
+2. Start venv
+3. Install PIP modules
+4. Install APT package
 
-```sh
-. .venv/bin/activate
-```
-
-Install environments:
-
-```sh
-pip install -r requirements.txt
-```
-
-Run the server:
-
-```sh
-python run.py
-```
+> Just running the script will execute is in the subshell which will not effect current shell.
+> Which means the venv will not be activated on current shell when ran with `./venv_setup.sh`.
 
 ---
 
