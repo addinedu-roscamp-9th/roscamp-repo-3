@@ -3,10 +3,12 @@ from app.models.robots_model import RobotsData
 
 
 def test_connection(data: RobotsData):
-    print(f"{data.robot_id}")
-    print(f"{data.namespace}")
-    print(f"{data.robot_type}")
-    print(f"{data.robot_name}")
+    print('\n=== Data from Jetcobot ===\n')
+    print(f"robot_id:   {data.robot_id}")
+    print(f"namespace:  {data.namespace}")
+    print(f"robot_type: {data.robot_type}")
+    print(f"robot_name: {data.robot_name}")
+    print()
 
     pos = Postures(
         pos_id="foo",
@@ -21,4 +23,4 @@ def test_connection(data: RobotsData):
         gap=100,  # completely open
     )
 
-    return pos.model_dump_json()
+    return pos.model_dump()
