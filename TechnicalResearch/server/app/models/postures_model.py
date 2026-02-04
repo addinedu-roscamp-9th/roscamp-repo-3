@@ -1,9 +1,6 @@
-from dataclasses import dataclass
-
 from pydantic import BaseModel
 
 
-@dataclass()
 class Postures(BaseModel):
     pos_id: str
     pos_name: str
@@ -13,5 +10,5 @@ class Postures(BaseModel):
     j4: float
     j5: float
     j6: float
-    angle: float
+    angle: int
     gap: int

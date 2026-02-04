@@ -76,7 +76,7 @@ create table postures (
         j4       float not null,
         j5       float not null,
         j6       float not null,
-        angle    float not null,
+        angle    int not null,
         gap      int not null
     );
 
