@@ -5,6 +5,18 @@
 
 ---
 
+## Dependency
+
+### PIP
+
+- requests
+
+```sh
+pip install pymycobot opencv-python requests pydantic
+```
+
+---
+
 ## Environment
 
 현재 경로 `jetcobot/`에 파이썬 가상환경을 생성:
@@ -34,11 +46,3 @@ pip install -U pip
 ```sh
 pip install -r requirements.txt
 ```
-
----
-
-## Dependency
-
-설치한 파이썬 모듈
-
-- requests
