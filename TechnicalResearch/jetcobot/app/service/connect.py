@@ -25,7 +25,7 @@ class Connect:
     def gateway(self):
         try:
             url = f"http://{self.host}:{self.port}/{self.endpoint}"
-            response = requests.post(url, json=data.__dict__, timeout=10)
+            response = requests.post(url, json=data.model_dump(), timeout=10)
 
             if response.status_code == 200:
                 print(f"Successfully connected to JetCobot at {url}")
