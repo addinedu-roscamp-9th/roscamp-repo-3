@@ -7,42 +7,27 @@
 
 ## Dependency
 
-### PIP
+Installed dependencies
 
+- pymycobot
+- numpy
+- pydantic
 - requests
-
-```sh
-pip install pymycobot opencv-python requests pydantic
-```
 
 ---
 
 ## Environment
 
-현재 경로 `jetcobot/`에 파이썬 가상환경을 생성:
-
-> `ls`를 해도 보이지 않도록 이름 앞에 `.`을 붙여준다
+Source the `venv_setup.sh` script to effect the current shell:
 
 ```sh
-python3 -m venv .venv
+source ./venv_setup.sh
 ```
 
-가상환경 활성화:
+1. Create venv named `.venv`
+2. Start venv
+3. Install PIP modules
+4. Install APT package
 
-> `source`대신에 `.` 사용
-
-```sh
-. .venv/bin/activate
-```
-
-`pip` 업데이트:
-
-```sh
-pip install -U pip
-```
-
-`requirements.txt`에 작성되어 있는 모듈 설치:
-
-```sh
-pip install -r requirements.txt
-```
+> Just running the script will execute is in the subshell which will not effect current shell.
+> Which means the venv will not be activated on current shell when ran with `./venv_setup.sh`.
