@@ -5,7 +5,7 @@ from pathlib import Path
 
 import cv2
 import requests
-from models.jetcobot_model import RobotsData
+from model.model import RobotsData
 
 GATEWAY_HOST = "http://192.168.0.56"
 GATEWAY_PORT = 8000
