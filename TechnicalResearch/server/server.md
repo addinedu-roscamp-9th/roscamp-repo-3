@@ -32,7 +32,7 @@ If reading from `requirements.txt` doesn't work install it manullay
 install with pip
 
 ```sh
-pip install uvicorn fastapi pyyaml numpy sqlalchemy
+pip install uvicorn fastapi pyyaml numpy sqlalchemy jinja2 setuptools typeguard
 ```
 
 ### APT
@@ -40,7 +40,7 @@ pip install uvicorn fastapi pyyaml numpy sqlalchemy
 - ros2-jazzy-nav2-msgs
 
 ```sh
-sudo apt install ros2-jazzy-nav2-msgs
+sudo apt install ros-jazzy-nav2-msgs
 ```
 
 ---
