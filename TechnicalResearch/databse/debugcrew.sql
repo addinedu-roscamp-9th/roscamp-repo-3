@@ -8,6 +8,7 @@ drop table if exists logs;
 drop table if exists schedules;
 drop table if exists users;
 drop table if exists robots;
+drop table if exists robot_types;
 drop table if exists detections;
 drop table if exists items;
 drop table if exists commands;
@@ -22,11 +23,22 @@ create table users (
 
 insert into users (user_id, user_pw, user_name) values ('asdf', 'asdf', 'foobar');
 
+create table robot_types (
+    robot_type varchar(30) primary key
+);
+
+insert into robot_types (robot_type)
+values
+    ('transport'),
+    ('cleaner'),
+    ('arm');
+
 create table robots (
         robot_id   varchar(11) primary key,
         namespace  varchar(20) not null,
         robot_type varchar(30) not null,
-        robot_name varchar(30) not null
+        robot_name varchar(30) not null,
+        foreign key (robot_type) references robot_types (robot_type)
     );
 
 create table detections (
