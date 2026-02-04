@@ -58,6 +58,7 @@ rosidl-typesupport-introspection-cpp==4.6.7
 rpyutils==0.4.2
 sensor-msgs==5.3.6
 service-msgs==2.0.3
+setuptools==80.10.2
 statistics-msgs==2.0.3
 std-msgs==5.3.6
 tf-transformations==1.1.0
