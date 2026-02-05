@@ -12,6 +12,7 @@ pip_packages=(
   "pydantic==2.12.5"
   "requests==2.32.5"
   "doeenv==0.9.9"
+  "websockets"
 )
 
 # create venv if not already created
