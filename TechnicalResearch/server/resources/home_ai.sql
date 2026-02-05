@@ -20,7 +20,9 @@ create table users (
         user_name varchar(30) not null
     );
 
-insert into users (user_id, user_pw, user_name) values ('asdf', 'asdf', 'foobar');
+insert into users
+values
+  ('asdf', 'asdf', 'foobar');
 
 create table robot_types (
     robot_type varchar(30) primary key
@@ -70,15 +72,21 @@ create table positions (
 create table postures (
         pos_id   varchar(11) primary key,
         pos_name varchar(30) not null,
-        j1       float not null,
-        j2       float not null,
-        j3       float not null,
-        j4       float not null,
-        j5       float not null,
-        j6       float not null,
+        j1       int not null,
+        j2       int not null,
+        j3       int not null,
+        j4       int not null,
+        j5       int not null,
+        j6       int not null,
         angle    int not null,
         gap      int not null
     );
+
+-- "p" + 6 digit date + 4 digit int
+insert into postures
+values
+  ( "p2602050001", "shelve_side", -90, 0, 0, 0, 0, 0, 135, 100 ),
+  ( "p2602050002", "trash_side", 90, 0, 0, 0, 0, 0, 135, 100 );
 
 create table schedules (
         schedule_id  varchar(11) primary key,
