@@ -16,6 +16,8 @@ pip_packages=(
   "setuptools==80.10.2"
   "typeguard==4.4.4"
   "websockets"
+  "multipart"
+  "opencv-python"
 )
 
 apt_packages=(
