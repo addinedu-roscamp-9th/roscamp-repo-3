@@ -15,6 +15,7 @@ pip_packages=(
   "jinja2==3.1.6"
   "setuptools==80.10.2"
   "typeguard==4.4.4"
+  "websockets"
 )
 
 apt_packages=(
