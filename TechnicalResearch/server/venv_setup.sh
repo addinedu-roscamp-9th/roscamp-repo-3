@@ -35,8 +35,8 @@ fi
 # update pip
 pip install -U pip
 
-# installed required dependencies with pip
+# install required dependencies with pip
 pip install "${pip_packages[@]}"
 
-# installed required dependencies with apt
+# install required dependencies with apt
 sudo apt install -y "${apt_packages[@]}"
