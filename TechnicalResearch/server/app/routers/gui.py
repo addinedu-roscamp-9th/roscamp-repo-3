@@ -1,13 +1,15 @@
-from fastapi import APIRouter
+"""
+GUI API 라우터
+"""
 
+from fastapi import APIRouter
 from app.models.gui_model import GuiData
 from app.services import gui_service
 
 router = APIRouter()
 
 
-# http://192.168.5.10:8000/gui
 @router.post("")
-def gui_connection_test(data: GuiData):
-    result = gui_service.gui_connection_test(data)
-    return result
+def gui_command(data: GuiData):
+    """GUI 명령 처리"""
+    return gui_service.handle_gui_command(data)

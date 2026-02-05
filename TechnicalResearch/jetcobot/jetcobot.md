@@ -1,44 +1,60 @@
 # Jetcobot
 
-- [Environment](#environment)
+- [Dot Env](#dot-env)
 - [Dependency](#dependency)
+- [Environment](#environment)
 
 ---
 
-## Environment
+## Dot Env
 
-현재 경로 `jetcobot/`에 파이썬 가상환경을 생성:
-
-> `ls`를 해도 보이지 않도록 이름 앞에 `.`을 붙여준다
+Create `.env` file at same path as `main.py`
 
 ```sh
-python3 -m venv .venv
+touch .env
 ```
 
-가상환경 활성화:
-
-> `source`대신에 `.` 사용
+Add the following inside the `.env`:
 
 ```sh
-. .venv/bin/activate
+GATEWAY_HOST=192.168.0.56
+GATEWAY_PORT=8000
+ENDPOINT=jetcobot
 ```
 
-`pip` 업데이트:
+> Change the `GATEWAY_HOST` value as you needed
+
+Or with echo command:
 
 ```sh
-pip install -U pip
-```
-
-`requirements.txt`에 작성되어 있는 모듈 설치:
-
-```sh
-pip install -r requirements.txt
+echo -e 'GATEWAY_HOST=192.168.0.56\nGATEWAY_PORT=8000\nENDPOINT=jetcobot' >> .env
 ```
 
 ---
 
 ## Dependency
 
-설치한 파이썬 모듈
+Installed dependencies
 
+- pymycobot
+- numpy
+- pydantic
 - requests
+
+---
+
+## Environment
+
+Source the `venv_setup.sh` script to effect the current shell:
+
+```sh
+source ./venv_setup.sh
+```
+
+1. Create venv named `.venv`
+2. Start venv
+3. Install PIP modules
+4. Install APT package
+
+> Just running the script will execute is in the subshell which will not effect current shell.
+> Which means the venv will not be activated on current shell when ran with `./venv_setup.sh`.

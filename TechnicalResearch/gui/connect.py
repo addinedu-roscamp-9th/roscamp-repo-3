@@ -1,18 +1,27 @@
-import requests
-from models.jetcobot_model import JetcobotData
+import json
+from dataclasses import dataclass
 
-SERVER_URL = "http://192.168.5.10:8000"
+import requests
+
+with open("./config.json", encoding="UTF-8") as file:
+    config = json.load(file)
+
+SERVER_URL = config["server_url"]
+
+
+@dataclass
+class JetcobotData:
+    robot_id: int
+    status: str
 
 
 def connect_to_server():
-    # TODO: refactor hardcoded values
+    # TODO: refactor ardcode name
     data = JetcobotData(robot_id=51, status="idle")
 
     try:
         response = requests.post(
-            f"{SERVER_URL}/jetcobot",
-            json=data.__dict__,  # convert data into dict
-            timeout=5,
+            f"{SERVER_URL}/gui", json=data.__dict__, timeout=5  # convert to dict
         )
         print("status:", response.status_code)
         print("body:", response.text)

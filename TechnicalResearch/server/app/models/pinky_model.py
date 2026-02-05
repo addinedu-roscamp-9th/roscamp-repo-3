@@ -1,3 +1,7 @@
+"""
+Pinky Robot 데이터 모델
+"""
+
 import datetime
 from dataclasses import dataclass
 
