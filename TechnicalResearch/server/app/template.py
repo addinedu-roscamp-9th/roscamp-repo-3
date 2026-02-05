@@ -10,9 +10,6 @@ from sqlalchemy import (
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-# connect to db
-DATABASE_URL = "mysql+pymysql://user:password@localhost:3306/robot_db"
-
 # db name : home_ai
 # username: debugcrew
 # pw      : 1234
