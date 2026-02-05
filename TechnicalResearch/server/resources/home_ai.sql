@@ -78,15 +78,14 @@ create table postures (
         j4       int not null,
         j5       int not null,
         j6       int not null,
-        angle    int not null,
         gap      int not null
     );
 
 -- "p" + 6 digit date + 4 digit int
 insert into postures
 values
-  ( "p2602050001", "shelve_side", -90, 0, 0, 0, 0, 0, 135, 100 ),
-  ( "p2602050002", "trash_side", 90, 0, 0, 0, 0, 0, 135, 100 );
+  ( "p2602050001", "shelve_side", -90, 0, 0, 0, 0, 135, 100 ),
+  ( "p2602050002", "trash_side", 90, 0, 0, 0, 0, 135, 100 );
 
 create table schedules (
         schedule_id  varchar(11) primary key,

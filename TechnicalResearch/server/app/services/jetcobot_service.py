@@ -13,14 +13,13 @@ def test_connection(data: RobotsData):
     pos = Postures(
         pos_id="foo",
         pos_name="bar",
-        j1=0.0,
-        j2=0.0,
-        j3=0.0,
-        j4=0.0,
-        j5=0.0,
-        j6=0.0,
-        angle=-135, # camera to bottom
-        gap=100,  # completely open
+        j1=0,
+        j2=0,
+        j3=0,
+        j4=0,
+        j5=0,
+        j6=135,  # camera to bottom
+        gap=0,  # completely open
     )
 
     return pos.model_dump()
