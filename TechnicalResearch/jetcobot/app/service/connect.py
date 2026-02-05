@@ -1,14 +1,15 @@
-import requests
+import json
 
+import websockets
 from app.model.robot_model import RobotsData
 
-ROBOOT_ID = "id"
+ROBOT_ID = "id"
 NAMESPACE = "namespace"
 ROBOT_TYPE = "type"
 ROBOT_NAME = "name"
 
 data = RobotsData(
-    robot_id=ROBOOT_ID,
+    robot_id=ROBOT_ID,
     namespace=NAMESPACE,
     robot_type=ROBOT_TYPE,
     robot_name=ROBOT_NAME,
@@ -21,17 +22,24 @@ class Connect:
         self.host = host
         self.port = port
         self.endpoint = endpoint
+        self.websocket = None
 
-    def gateway(self):
+    async def gateway(self):
         try:
-            url = f"http://{self.host}:{self.port}/{self.endpoint}"
-            response = requests.post(url, json=data.model_dump(), timeout=10)
-
-            if response.status_code == 200:
-                print(f"Successfully connected to JetCobot at {url}")
-                print(f"Response: {response.json()}")
+            url = f"ws://{self.host}:{self.port}/{self.endpoint}"
+            async with websockets.connect(url) as websocket:
+                self.websocket = websocket
                 self.is_connected = True
-                return response.json()
+                print(f"Successfully connected to JetCobot at {url}")
+
+                # Send data
+                await websocket.send(json.dumps(data.model_dump()))
+
+                # Receive response
+                response = await websocket.recv()
+                result = json.loads(response)
+                print(f"Response: {result}")
+                return result
 
         except Exception as e:
             print(f"Connection failed: {e}")

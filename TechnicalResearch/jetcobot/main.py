@@ -1,10 +1,10 @@
+import asyncio
 import os
-
-from dotenv import load_dotenv
 
 from app.controller.movement import Move
 from app.model.posture_model import PosturesData
 from app.service.connect import Connect
+from dotenv import load_dotenv
 
 # Load environment variables from .env file
 load_dotenv()
@@ -20,19 +20,15 @@ SPEED = 30
 def main():
     print("connect to server")
     conn = Connect(GATEWAY_HOST, GATEWAY_PORT, ENDPOINT)
-    response = conn.gateway()
-    print(type(response))
-    print(response)
+    response = asyncio.run(conn.gateway())  # Run async function
 
     if response is None:
         print("Failed to connect to server")
         return
 
-    # Parse response into PosturesData (response is already a dict from response.json())
     posture = PosturesData(**response)
     print(f"Received posture: {posture}")
 
-    # Initialize robot and execute movement
     move = Move()
     move.execute(posture, SPEED)
 
