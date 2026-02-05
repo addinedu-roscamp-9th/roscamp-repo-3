@@ -1,6 +1,7 @@
 import json
 
 import websockets
+
 from app.model.robot_model import RobotsData
 
 ROBOT_ID = "id"
