@@ -2,7 +2,7 @@ import time
 
 from pymycobot.mycobot280 import MyCobot280
 
-from app.model.model import PosturesData
+from app.model.posture_model import PosturesData
 
 PORT = "/dev/ttyJETCOBOT"
 BAUD = 1_000_000

@@ -1,6 +1,6 @@
 import requests
 
-from app.model.model import RobotsData
+from app.model.robot_model import RobotsData
 
 ROBOOT_ID = "id"
 NAMESPACE = "namespace"
