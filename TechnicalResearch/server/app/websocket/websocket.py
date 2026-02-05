@@ -108,7 +108,7 @@ def handle_gui_message(data: dict) -> dict:
         return {"type": "gui_response", "status": "error", "message": str(e)}
 
 
-@router.websocket("/ws/{client_id}")
+@router.websocket("s/{client_id}")
 async def websocket_endpoint(websocket: WebSocket, client_id: str):
     """
     WebSocket endpoint for real-time communication.
@@ -165,7 +165,8 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
         manager.disconnect(client_id)
 
 
-@router.get("/ws/clients")
+# http://192.168.0.56:8000/ws/clients
+@router.post("/clients")
 async def get_connected_clients():
     """HTTP endpoint to check connected WebSocket clients."""
     return {"clients": manager.get_connected_clients()}

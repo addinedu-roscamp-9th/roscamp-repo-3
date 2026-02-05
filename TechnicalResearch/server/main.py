@@ -13,7 +13,7 @@ app = FastAPI(title="Roboto Server", redirect_slashes=False)
 app.include_router(jetcobot.router, prefix="/jetcobot", tags=["jetcobot"])
 app.include_router(pinky.router, prefix="/pinky", tags=["pinky"])
 app.include_router(gui.router, prefix="/gui", tags=["gui"])
-app.include_router(websocket.router, tags=["websocket"])
+app.include_router(websocket.router, prefix="/ws", tags=["websocket"])
 
 
 if __name__ == "__main__":
