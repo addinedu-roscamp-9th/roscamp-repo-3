@@ -1,11 +1,5 @@
 #!/usr/bin/env bash
 
-# stop if compiling fail
-# -e: errexti - exit immediately on error
-# -u: nounset - error on unset variable
-# -o pipefaul: fail pipelines correctly
-set -euo pipefail
-
 pip_packages=(
   "pymycobot==4.0.4"
   "numpy==2.4.2"

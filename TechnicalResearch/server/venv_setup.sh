@@ -1,11 +1,5 @@
 #!/usr/bin/env bash
 
-# stop if compiling fail
-# -e: errexti - exit immediately on error
-# -u: nounset - error on unset variable
-# -o pipefaul: fail pipelines correctly
-set -euo pipefail
-
 pip_packages=(
   "uvicorn==0.40.0"
   "fastapi==0.128.0"
