@@ -22,6 +22,12 @@ GATEWAY_PORT=8000
 ENDPOINT=jetcobot
 ```
 
+Run `ip a` command from terminal to where the server is running
+
+```sh
+ip a
+```
+
 > Change the `GATEWAY_HOST` value as you needed
 
 Or with echo command:
