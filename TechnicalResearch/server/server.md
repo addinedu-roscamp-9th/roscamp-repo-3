@@ -2,7 +2,6 @@
 
 - [Project Structure](#project-structure)
 - [Environments](#environments)
-- [API Endpoints](#api-endpoints)
 
 ---
 
@@ -35,11 +34,3 @@ source ./venv_setup.sh
 
 > Just running the script will execute is in the subshell which will not effect current shell.
 > Which means the venv will not be activated on current shell when ran with `./venv_setup.sh`.
-
----
-
-## API Endpoints
-
-| Method | URL          | Description        |
-| ------ | ------------ | ------------------ |
-| POST   | `/jetcobot/` | Robot sends status |
