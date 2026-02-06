@@ -19,7 +19,10 @@ SPEED = 30
 
 
 def main():
-    print("connect to server")
+    # initialize first
+    move = Move()
+
+    print("Connect to server ...")
     conn = Connect(GATEWAY_HOST, GATEWAY_PORT, ENDPOINT)
     response = asyncio.run(conn.gateway())  # Run async function
 
@@ -30,7 +33,6 @@ def main():
     posture = PosturesData(**response)
     print(f"Received posture: {posture}")
 
-    move = Move()
     move.execute(posture, SPEED)
 
 
