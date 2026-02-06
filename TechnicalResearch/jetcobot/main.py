@@ -12,8 +12,8 @@ load_dotenv()
 
 # 1st args: value read from .env
 # 2nd args: default value
-GATEWAY_HOST = os.getenv("HOST", "192.168.0.56")
-GATEWAY_PORT = int(os.getenv("PORT", "8000"))
+GATEWAY_HOST = os.getenv("GATEWAY_HOST", "192.168.0.56")
+GATEWAY_PORT = int(os.getenv("GATEWAY_PORT", "8000"))
 ENDPOINT = os.getenv("ENDPOINT", "jetcobot")
 SPEED = 30
 
