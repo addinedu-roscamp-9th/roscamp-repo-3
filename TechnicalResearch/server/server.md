@@ -10,11 +10,11 @@
 ```
 project/
 ├── app/
-│   ├── routers/     ← API endpoints (handles requests)
-│   ├── services/    ← Business logic
-│   └── models/      ← Data structures (Pydantic)
-├── main.py          ← App entry point
-└── requirements.txt
+│   ├── routers/     ←  API endpoints (handles requests)
+│   ├── services/    ←  Business logic
+│   ├── models/      ←  Data structures (Pydantic)
+│   └── main.py      ←  App entry point
+└── run.py       ←  Run this to start the server
 ```
 
 ---
