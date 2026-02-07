@@ -34,13 +34,27 @@ ip a
 
 ## Environment
 
-Source the `venv_setup.sh` script to effect the current shell:
+Run the `venv_setup.sh` script
 
 ```sh
-source ./venv_setup.sh
+./venv_setup.sh
 ```
 
-> Creates `.venv` and install dependencies
+1. Creates `.venv` at current directory
+2. Updates PIP
+3. Install required packages
+
+Check `.venv` created:
+
+```sh
+ls -a # or $ la
+```
+
+Start the venv:
+
+```sh
+source .venv/bin/activate
+```
 
 ---
 

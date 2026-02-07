@@ -10,28 +10,26 @@ pip install ultralytics
 
 ---
 
-## Virtual Environments
+## Environment
 
-Create venv named `.venv`
+Run the `venv_setup.sh` script
 
 ```sh
-python3 -m venv .venv
+./venv_setup.sh
 ```
 
-Start the venv
+1. Creates `.venv` at current directory
+2. Updates PIP
+3. Install required packages
+
+Check `.venv` created:
 
 ```sh
-. .venv/bin/activate
+ls -a # or $ la
 ```
 
-Update `pip`
+Start the venv:
 
 ```sh
-pip install -U pip
-```
-
-Get the environment ready with `requirements.txt`:
-
-```sh
-pip install -r requirements.txt
+source .venv/bin/activate
 ```
