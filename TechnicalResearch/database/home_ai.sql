@@ -3,7 +3,7 @@
 
 use home_ai;
 
-drop table if exists logs;
+drop table if exists history;
 drop table if exists schedules;
 drop table if exists users;
 drop table if exists robots;
@@ -101,8 +101,8 @@ create table schedules (
         foreign key (position_id) references positions (position_id)
     );
 
-create table logs (
-        log_id         varchar(11) primary key,
+create table history (
+        history_id     varchar(11) primary key,
         user_id        varchar(30),
         item_id        varchar(11),
         robot_1        varchar(11),
