@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 pip_packages=(
-  "ultralytics==8.4.11"
+  "ultralytics"
 )
 
 # create venv if not already created

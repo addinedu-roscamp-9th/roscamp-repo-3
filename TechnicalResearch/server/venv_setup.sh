@@ -1,17 +1,19 @@
 #!/usr/bin/env bash
 
 pip_packages=(
-  "uvicorn==0.40.0"
-  "fastapi==0.128.0"
-  "pyyaml==6.0.3"
-  "numpy==2.4.2"
-  "sqlalchemy==2.0.46"
-  "jinja2==3.1.6"
-  "setuptools==80.10.2"
-  "typeguard==4.4.4"
-  "websockets"
+  "cryptography"
+  "fastapi"
+  "jinja2"
   "multipart"
+  "numpy"
   "opencv-python"
+  "pymysql"
+  "pyyaml"
+  "setuptools"
+  "sqlalchemy"
+  "typeguard"
+  "uvicorn"
+  "websockets"
 )
 
 apt_packages=(
