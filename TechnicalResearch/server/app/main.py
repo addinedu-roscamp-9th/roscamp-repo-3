@@ -2,7 +2,6 @@ from fastapi import FastAPI
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 
 from app.database import schedule_mapper
-from app.database.connection import SessionLocal
 from app.routers import gui, jetcobot, pinky
 
 # FastAPI 앱 생성
@@ -16,8 +15,6 @@ app.include_router(gui.router, prefix="/gui", tags=["gui"])
 
 @app.on_event("startup")
 async def select_schedules():
-    db = SessionLocal()
-
     try:
         schedules = schedule_mapper.select_all_schedules()
 
@@ -39,6 +36,3 @@ async def select_schedules():
         print(f"\nDatabase connection error: {e}")
     except SQLAlchemyError as e:
         print(f"\nDatabase error: {e}")
-
-    finally:
-        db.close()

@@ -1,7 +1,6 @@
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 
 from app.database import user_mapper
-from app.database.connection import SessionLocal
 
 
 def gui_connection_test():
@@ -9,7 +8,6 @@ def gui_connection_test():
 
 
 async def query_user_details():
-    # Prompt for user ID
     try:
         user_id = input("Enter user ID: ").strip()
     except (KeyboardInterrupt, EOFError):
@@ -20,15 +18,10 @@ async def query_user_details():
         print("Error: User ID cannot be empty")
         return
 
-    # Create database session
-    db = SessionLocal()
-
     try:
-        # Query user by ID
         user = user_mapper.select_user_by_id(user_id)
 
         if user:
-
             print("=" * 30)
             print("selected user")
             print(f"user_id: {user.user_id}")
@@ -42,5 +35,3 @@ async def query_user_details():
         print(f"\nDatabase connection error: {e}")
     except SQLAlchemyError as e:
         print(f"\nDatabase error: {e}")
-    finally:
-        db.close()
