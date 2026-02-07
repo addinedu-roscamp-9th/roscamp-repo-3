@@ -3,9 +3,9 @@ import os
 
 from dotenv import load_dotenv
 
-from app.controller.movement import Move
 from app.model.posture_model import PosturesData
 from app.service.connect import Connect
+from app.service.movement import Move
 
 # Load environment variables from .env file
 load_dotenv()
