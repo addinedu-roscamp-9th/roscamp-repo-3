@@ -1,7 +1,6 @@
 # Jetcobot
 
 - [Dot Env](#dot-env)
-- [Dependency](#dependency)
 - [Environment](#environment)
 
 ---
@@ -38,17 +37,6 @@ echo -e 'GATEWAY_HOST=192.168.0.56\nGATEWAY_PORT=8000\nENDPOINT=jetcobot' >> .en
 
 ---
 
-## Dependency
-
-Installed dependencies
-
-- pymycobot
-- numpy
-- pydantic
-- requests
-
----
-
 ## Environment
 
 Source the `venv_setup.sh` script to effect the current shell:
@@ -57,10 +45,10 @@ Source the `venv_setup.sh` script to effect the current shell:
 source ./venv_setup.sh
 ```
 
-1. Create venv named `.venv`
-2. Start venv
+1. Creates venv named `.venv`
+2. Starts venv
 3. Install PIP modules
-4. Install APT package
+4. Install APT packages
 
 > Just running the script will execute is in the subshell which will not effect current shell.
 > Which means the venv will not be activated on current shell when ran with `./venv_setup.sh`.
