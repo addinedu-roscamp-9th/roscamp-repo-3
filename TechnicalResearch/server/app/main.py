@@ -18,8 +18,14 @@ async def select_schedules():
     try:
         schedules = schedule_mapper.select_all_schedules()
 
+        # TODO: execute the order when time comes
+
         print("=" * 30)
         print("query schedules")
+
+        if not schedules:
+            print("There is no schedule")
+            return
 
         for schedule in schedules:
             print(f"schedule_id: {schedule.schedule_id}")
@@ -29,7 +35,6 @@ async def select_schedules():
             print(f"execute_time: {schedule.execute_time}")
             print(f"cycle: {schedule.cycle}")
             print(f"on_weekends: {schedule.on_weekends}")
-            print()
 
         print("=" * 30)
     except OperationalError as e:
