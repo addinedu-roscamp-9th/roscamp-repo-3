@@ -2,72 +2,60 @@
 
 ## Repository Layout
 
-The repo is a **multi-module Python monorepo**. Each module owns its own virtualenv,
-entry point, and `.pylintrc`. There is no shared build system or top-level package manager.
+Multi-module Python monorepo. Each module owns its virtualenv, entry point, and `.pylintrc`.
 
 ```
-roscamp-repo-3/
-├── TechnicalResearch/
-│   ├── ai/            – YOLO inference server (async UDP, ultralytics)
-│   ├── camera/        – Standalone OpenCV calibration / undistortion scripts
-│   ├── gui/           – PyQt5 desktop control panel (HTTP client → server)
-│   ├── jetcobot/      – MyCobot280 arm driver (HTTP client → server)
-│   └── server/        – FastAPI central hub (routers → services → models)
+roscamp-repo-3/TechnicalResearch/
+├── ai/        – YOLO inference server (async UDP, ultralytics)
+├── camera/    – OpenCV calibration / undistortion scripts
+├── gui/       – PyQt5 desktop GUI (HTTP client → server)
+├── jetcobot/  – MyCobot280 arm driver (HTTP/REST service)
+├── pinky/     – ROS2 mobile robot control scripts
+└── server/    – FastAPI central hub (routers → services → models)
 ```
 
 ---
 
-## Environment Setup (per-module)
+## Build / Run / Lint
 
-Each module that needs dependencies ships a `venv_setup.sh`. Activate before running:
+### Environment Setup
+
+Each module with dependencies has `venv_setup.sh`:
 
 ```bash
 cd TechnicalResearch/<module>
-bash venv_setup.sh          # creates .venv and pip-installs pinned deps
+bash venv_setup.sh          # creates .venv, installs deps
 source .venv/bin/activate
 python main.py
 ```
 
-All packages are **exact-version pinned** (e.g. `fastapi==0.128.0`). Do not loosen pins
-without a documented reason.
+### Common Commands
 
----
-
-## Running / Linting (no formal build step)
-
-| Action                    | Command                                                                        |
-| ------------------------- | ------------------------------------------------------------------------------ |
-| Start AI inference server | `cd ai && source .venv/bin/activate && python main.py`                         |
-| Start FastAPI server      | `cd server && source .venv/bin/activate && python main.py`                     |
-| Start GUI                 | `cd gui && source .venv/bin/activate && python main.py`                        |
-| Start Jetcobot client     | `cd jetcobot && source .venv/bin/activate && python main.py`                   |
-| Lint a single module      | `cd <module> && source .venv/bin/activate && python -m pylint app/`            |
-| Lint a single file        | `cd <module> && source .venv/bin/activate && python -m pylint path/to/file.py` |
+| Task                 | Command                                                               |
+| -------------------- | --------------------------------------------------------------------- |
+| Run AI server        | `cd ai && source .venv/bin/activate && python main.py`               |
+| Run FastAPI server   | `cd server && source .venv/bin/activate && python main.py`           |
+| Run GUI              | `cd gui && source .venv/bin/activate && python main.py`              |
+| Run Jetcobot service | `cd jetcobot && source .venv/bin/activate && python main.py`         |
+| Lint module          | `cd <module> && source .venv/bin/activate && python -m pylint app/`  |
+| Lint single file     | `cd <module> && source .venv/bin/activate && python -m pylint <file>` |
 
 ### Tests
 
-There is **no test suite** in this repository at present. No `pytest`, `unittest`, or
-`conftest.py` exist. If you add tests, follow these conventions:
+**No test suite exists.** If adding tests:
+- Place in `tests/` inside the module
+- Use `pytest`: `python -m pytest tests/`
+- Run single test: `python -m pytest tests/test_foo.py::test_bar -v`
+- Add `pytest` to `venv_setup.sh`
 
-- Place them in a `tests/` directory inside the relevant module.
-- Use `pytest` as the runner: `source .venv/bin/activate && python -m pytest tests/`
-- Run a single test: `python -m pytest tests/test_foo.py::test_bar -v`
-- Add `pytest` to that module's `venv_setup.sh`.
+### Pylint
 
-### Pylint configuration
-
-Every module shares the same `.pylintrc` suppressions:
-
+Shared `.pylintrc` in each module:
 ```ini
 [MESSAGES CONTROL]
-disable =
-    missing-docstring,
-    too-few-public-methods,
-    wrong-import-order,
+disable = missing-docstring, too-few-public-methods, wrong-import-order
 ```
-
-Do **not** add new global suppressions. Silence individual violations with inline
-`# pylint: disable=<code>` comments instead.
+Use inline `# pylint: disable=<code>` for one-off suppressions.
 
 ---
 
