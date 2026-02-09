@@ -8,10 +8,12 @@ set -euo pipefail
 
 pip_packages=(
   "dotenv"
+  "fastapi"
   "numpy"
   "pydantic"
   "pymycobot"
   "requests"
+  "uvicorn"
   "websockets"
 )
 
