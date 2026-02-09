@@ -1,16 +1,26 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from pydantic import ValidationError
 
-from app.services import gui_service
+from app.controller import gui_controller
 
 router = APIRouter()
 
 
-@router.post("")
-def gui_command():
-    return gui_service.gui_connection_test()
+# ws://192.168.0.56:8000/gui
+@router.websocket("")
+async def jetcobot_connection_test(websocket: WebSocket):
+    await websocket.accept()
+    try:
+        while True:
+            msg = await websocket.receive_json()
 
+            # commands from gui are handled from controller
+            result = gui_controller.gui_controller(msg)
 
-@router.post("login")
-def gui_login():
-    result = gui_service.query_user_details()
-    return result
+            await websocket.send_json(result)
+    except WebSocketDisconnect:
+        print("Client disconnected normally")
+    except ValidationError as e:
+        print(f"Invalid data format from client: {e}")
+    except ValueError as e:
+        print(f"Service error: {e}")
