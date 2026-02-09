@@ -1,6 +1,4 @@
-import json
-
-import websockets
+import requests
 
 from app.model.robot_model import RobotsData
 
@@ -23,25 +21,28 @@ class Connect:
         self.host = host
         self.port = port
         self.endpoint = endpoint
-        self.websocket = None
 
-    async def gateway(self):
+    def gateway(self):
+        """Connect to the gateway server via HTTP POST."""
         try:
-            url = f"ws://{self.host}:{self.port}/{self.endpoint}"
-            async with websockets.connect(url) as websocket:
-                self.websocket = websocket
-                self.is_connected = True
-                print(f"Successfully connected to JetCobot at {url}")
+            url = f"http://{self.host}:{self.port}/{self.endpoint}"
+            response = requests.post(url, json=data.model_dump(), timeout=5)
+            response.raise_for_status()
 
-                # Send data
-                await websocket.send(json.dumps(data.model_dump()))
+            self.is_connected = True
+            result = response.json()
+            print(f"Successfully connected to JetCobot at {url}")
+            print(f"Response: {result}")
+            return result
 
-                # Receive response
-                response = await websocket.recv()
-                result = json.loads(response)
-                print(f"Response: {result}")
-                return result
-
-        except Exception as e:
+        except requests.exceptions.Timeout:
+            print(f"Connection timeout: {url}")
+        except requests.exceptions.ConnectionError as e:
             print(f"Connection failed: {e}")
+        except requests.exceptions.HTTPError as e:
+            print(f"HTTP error: {e}")
+        except Exception as e:
+            print(f"Unexpected error: {e}")
+
+        self.is_connected = False
         return None
