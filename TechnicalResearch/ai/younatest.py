@@ -1,11 +1,11 @@
-import cv2
 import base64
 import json
 import socket
-import numpy as np
-import time
-from ultralytics import YOLO
 from collections import deque
+
+import cv2
+import numpy as np
+from ultralytics import YOLO
 
 # ================= [캘리브레이션 데이터 로드] =================
 # try:
@@ -23,7 +23,7 @@ PC_PORT = 9000
 JETCOBOT_IP = "192.168.5.1"  # ⬅ JetCobot IP
 JETCOBOT_PORT = 9001  # ⬅ 좌표 수신 포트
 
-MODEL_PATH = "/home/youna/roscamp-repo-3/TechnicalResearch/ai/model/best.pt"
+MODEL_PATH = "./model/best.pt"
 
 CONF_THRESHOLD = 0.35
 IOU_THRESHOLD = 0.45
