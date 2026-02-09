@@ -1,78 +1,87 @@
 # pinky_cmd_listener.py
 import rclpy
 from rclpy.node import Node
-from geometry_msgs.msg import Twist  # 로봇 이동 명령을 보내는 메시지 타입
-import requests  # HTTP 요청을 보내기 위해 사용
-import time  # 시간 계산용
+from geometry_msgs.msg import Twist
+import requests
+import time
 
 class PinkyCmdListener(Node):
+    """
+    ROS2 노드: 서버에서 핑키 명령을 받아 Twist 메시지로 변환 후
+    핑키 모터에 publish
+    - move 명령: distance_cm 단위 입력 → 실제 이동 거리 계산
+    """
+
     def __init__(self):
         super().__init__('pinky_cmd_listener')
 
-        # 핑키 로봇 ID
+        # 핑키 로봇 ID (서버에서 구분용)
         self.robot_id = "pinky_01"
 
-        # 명령을 가져올 서버 URL (FastAPI)
+        # 서버에서 명령을 GET할 URL
         self.server_url = f"http://192.168.0.52:8000/pinky/robot/cmd/{self.robot_id}"
 
-        # ROS2 퍼블리셔 생성 (cmd_vel 토픽으로 Twist 메시지 전송)
+        # ROS2 퍼블리셔 생성 (/cmd_vel 토픽, QoS 10)
         self.pub = self.create_publisher(Twist, '/cmd_vel', 10)
 
         # 0.5초마다 서버에서 명령 가져오기
         self.timer = self.create_timer(0.5, self.fetch_and_execute_cmd)
 
+        # 기본 이동 속도 (m/s)
+        self.default_speed = 0.2
+
     def fetch_and_execute_cmd(self):
-        """서버에서 명령을 가져와서 로봇을 움직이는 함수"""
+        """서버에서 명령을 가져와서 실제로 이동시키는 함수"""
         try:
-            # 서버에서 명령(GET) 요청
-            res = requests.get(self.server_url, timeout=0.5)
+            res = requests.get(self.server_url, timeout=2.0)
             if res.status_code == 200:
                 cmd = res.json()
                 self.get_logger().info(f"CMD received: {cmd}")
 
-                # 명령 실행
-                self.move_robot(cmd)
+                # cmd가 move 타입이면 이동 처리
+                if cmd.get("type") == "move":
+                    distance_cm = cmd.get("distance_cm", 10)
+                    if distance_cm > 0:
+                        self.move_distance(distance_cm)
+                else:
+                    self.get_logger().info("No move command, robot stays idle")
+
             else:
-                # 서버가 200 OK가 아닌 경우
-                self.get_logger().warn(f"Server returned {res.status_code}")
+                self.get_logger().warn(f"Server returned status {res.status_code}")
+
         except Exception as e:
-            # 서버 연결 실패 시 로그 출력
             self.get_logger().error(f"Failed to fetch cmd: {e}")
 
-    def move_robot(self, cmd):
-        """서버에서 받은 명령으로 3초간 이동 후 자동 정지"""
-        # 명령에서 linear, angular 값 읽기
-        linear = cmd.get("linear", 0.0)
-        angular = cmd.get("angular", 0.0)
+    def move_distance(self, distance_cm):
+        """
+        distance_cm 만큼 이동
+        - 기본 속도 self.default_speed 사용
+        - 이동 시간 계산: t = distance / speed
+        - 이동 후 멈춤
+        """
+        # 미터 단위로 변환
+        distance_m = distance_cm / 100.0
+        duration = distance_m / self.default_speed  # 이동 시간 = 거리 / 속도
 
-        # Twist 메시지 생성
+        self.get_logger().info(f"Moving {distance_cm}cm (~{duration:.2f}s)")
+
         twist = Twist()
-        twist.linear.x = linear
-        twist.angular.z = angular
+        twist.linear.x = self.default_speed  # x축 전진
+        twist.angular.z = 0.0  # 회전 없음
 
-        # 3초 동안 로봇 이동
-        start = time.time()
-        while time.time() - start < 3.0:
+        start_time = time.time()
+        while time.time() - start_time < duration:
             self.pub.publish(twist)
-            # 0.1초마다 spin_once 호출하여 ROS 이벤트 처리
-            rclpy.spin_once(self, timeout_sec=0.1)
+            rclpy.spin_once(self, timeout_sec=2.0)
 
-        # 이동 종료 후 멈추기
-        stop_twist = Twist()  # 모든 값 0
-        self.pub.publish(stop_twist)
+        # 이동 종료 후 완전히 멈춤
+        self.pub.publish(Twist())
         self.get_logger().info("Movement completed, robot stopped.")
 
 def main():
-    # ROS2 초기화
     rclpy.init()
-
-    # 노드 생성
     node = PinkyCmdListener()
-
-    # ROS2 스핀 (콜백 함수 실행)
     rclpy.spin(node)
-
-    # 종료 처리
     node.destroy_node()
     rclpy.shutdown()
 
