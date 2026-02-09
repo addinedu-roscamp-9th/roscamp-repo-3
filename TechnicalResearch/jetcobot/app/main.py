@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 
 from app.model.posture_model import PosturesData
-from app.router import router, set_move_controller, set_postures
+from app.routers import router
 from app.service.connect import Connect
 from app.service.movement import Move
 
@@ -23,28 +23,19 @@ app = FastAPI(
 )
 
 # Register router
-app.include_router(router, prefix="/api", tags=["movement"])
+app.include_router(jetcobot.router, prefix="/api", tags=["movement"])
 
 
 @app.on_event("startup")
 async def startup_event():
-    """Initialize robot and fetch postures from gateway server."""
-    print("=" * 50)
-    print("Jetcobot Controller Starting Up")
-    print("=" * 50)
-
-    # Initialize the arm
-    print("Initializing MyCobot280 arm...")
     try:
         move = Move()
         set_move_controller(move)
-        print("✓ Arm initialized successfully")
+        print("Arm initialized")
     except Exception as e:
-        print(f"✗ Failed to initialize arm: {e}")
-        print("  Server will start but movement commands will fail")
+        print(f"Failed to initialize arm: {e}")
         move = None
 
-    # Connect to gateway server and fetch postures
     print(f"\nConnecting to gateway server at {GATEWAY_HOST}:{GATEWAY_PORT}...")
     try:
         conn = Connect(GATEWAY_HOST, GATEWAY_PORT, ENDPOINT)
@@ -70,25 +61,3 @@ async def startup_event():
     print("=" * 50)
     print("Jetcobot Controller Ready")
     print("=" * 50)
-
-
-@app.get("/")
-def root():
-    """Root endpoint with API information."""
-    return {
-        "service": "Jetcobot Controller",
-        "version": "1.0.0",
-        "endpoints": {
-            "status": "GET /api/status",
-            "postures": "GET /api/postures",
-            "execute": "POST /api/execute",
-            "move": "POST /api/move",
-            "gripper": "POST /api/gripper",
-        },
-    }
-
-
-@app.get("/health")
-def health():
-    """Health check endpoint."""
-    return {"status": "healthy"}
