@@ -1,3 +1,4 @@
+from app.database import jetcobot_mapper
 from app.models.postures_model import Postures
 from app.models.robots_model import RobotsData
 
@@ -10,17 +11,9 @@ def test_connection(data: RobotsData):
     print(f"robot_name: {data.robot_name}")
     print()
 
-    # TODO: query from DB
-    pos = Postures(
-        pos_id="p260205003",
-        pos_name="trash_side",
-        j1=-90,
-        j2=40,
-        j3=-90,
-        j4=5,
-        j5=4,
-        j6=135,  # camera to bottom
-        gap=0,  # completely open
-    )
+    poses = jetcobot_mapper.select_all_pos()
 
-    return pos.model_dump()
+    # Convert ORM models to Pydantic models and return as list of dicts
+    result = [Postures.model_validate(pose).model_dump() for pose in poses]
+
+    return result
