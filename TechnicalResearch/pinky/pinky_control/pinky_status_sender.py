@@ -1,9 +1,11 @@
-import rclpy
-from rclpy.node import Node
-from nav_msgs.msg import Odometry  # 위치/회전 정보
-from sensor_msgs.msg import BatteryState  # 배터리 정보
-import requests
 import os
+
+import rclpy
+import requests
+from nav_msgs.msg import Odometry  # 위치/회전 정보
+from rclpy.node import Node
+from sensor_msgs.msg import BatteryState  # 배터리 정보
+
 
 class PinkyStatusSender(Node):
     """
@@ -13,7 +15,7 @@ class PinkyStatusSender(Node):
     """
 
     def __init__(self):
-        super().__init__('pinky_status_sender')
+        super().__init__("pinky_status_sender")
 
         # 서버 주소 (환경 변수 또는 기본값)
         host = os.getenv("ROBOT_SERVER_HOST", "192.168.0.52")
@@ -30,8 +32,10 @@ class PinkyStatusSender(Node):
         self.battery = 100
 
         # 구독: odom과 battery_state 토픽
-        self.create_subscription(Odometry, '/odom', self.odom_callback, 10)
-        self.create_subscription(BatteryState, '/battery_state', self.battery_callback, 10)
+        self.create_subscription(Odometry, "/odom", self.odom_callback, 10)
+        self.create_subscription(
+            BatteryState, "/battery_state", self.battery_callback, 10
+        )
 
         # 1초마다 서버로 상태 전송
         self.timer = self.create_timer(1.0, self.send_status)
@@ -44,6 +48,7 @@ class PinkyStatusSender(Node):
         self.y = msg.pose.pose.position.y
         # 단순화: yaw 계산 (z 축 회전)
         import math
+
         q = msg.pose.pose.orientation
         siny_cosp = 2.0 * (q.w * q.z + q.x * q.y)
         cosy_cosp = 1.0 - 2.0 * (q.y * q.y + q.z * q.z)
@@ -61,7 +66,7 @@ class PinkyStatusSender(Node):
             "x": self.x,
             "y": self.y,
             "theta": self.theta,
-            "battery": self.battery
+            "battery": self.battery,
         }
         try:
             res = requests.post(self.server_url, json=data, timeout=1.0)
@@ -87,4 +92,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

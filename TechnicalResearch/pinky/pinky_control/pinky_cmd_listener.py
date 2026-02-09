@@ -1,9 +1,11 @@
 # pinky_cmd_listener.py
-import rclpy
-from rclpy.node import Node
-from geometry_msgs.msg import Twist
-import requests
 import time
+
+import rclpy
+import requests
+from geometry_msgs.msg import Twist
+from rclpy.node import Node
+
 
 class PinkyCmdListener(Node):
     """
@@ -13,7 +15,7 @@ class PinkyCmdListener(Node):
     """
 
     def __init__(self):
-        super().__init__('pinky_cmd_listener')
+        super().__init__("pinky_cmd_listener")
 
         # 핑키 로봇 ID (서버에서 구분용)
         self.robot_id = "pinky_01"
@@ -22,7 +24,7 @@ class PinkyCmdListener(Node):
         self.server_url = f"http://192.168.0.52:8000/pinky/robot/cmd/{self.robot_id}"
 
         # ROS2 퍼블리셔 생성 (/cmd_vel 토픽, QoS 10)
-        self.pub = self.create_publisher(Twist, '/cmd_vel', 10)
+        self.pub = self.create_publisher(Twist, "/cmd_vel", 10)
 
         # 0.5초마다 서버에서 명령 가져오기
         self.timer = self.create_timer(0.5, self.fetch_and_execute_cmd)
@@ -78,6 +80,7 @@ class PinkyCmdListener(Node):
         self.pub.publish(Twist())
         self.get_logger().info("Movement completed, robot stopped.")
 
+
 def main():
     rclpy.init()
     node = PinkyCmdListener()
@@ -85,6 +88,6 @@ def main():
     node.destroy_node()
     rclpy.shutdown()
 
+
 if __name__ == "__main__":
     main()
-
