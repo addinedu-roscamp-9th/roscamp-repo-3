@@ -9,6 +9,7 @@ set -euo pipefail
 pip_packages=(
   "cryptography"
   "fastapi"
+  "httpx"
   "jinja2"
   "multipart"
   "numpy"
