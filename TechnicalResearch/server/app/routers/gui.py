@@ -51,7 +51,11 @@ def gui_controller(msg):
             return user_name
 
         case "fetch":
-            result = gui_service.fetch(data)
+            what_where = gui_service.fetch_info()
+            return what_where
+
+        case "fetch_cmd":
+            result = gui_service.fetch_cmd(data)
             return result
 
         case _:

@@ -1,5 +1,5 @@
 from app.database.connection import SessionLocal
-from app.models.database import User
+from app.models.database import Item, Position, User
 
 
 def login_user(user_id, user_pw):
@@ -15,6 +15,22 @@ def login_user(user_id, user_pw):
             return None
 
         return user.user_name
+
+    finally:
+        db.close()
+
+
+def fetch_info():
+    db = SessionLocal()
+    try:
+        print("Inside fetch_info()")
+        items = db.query(Item).all()
+        positions = db.query(Position).all()
+
+        if items and positions is None:
+            return None, None
+
+        return items, positions
 
     finally:
         db.close()
