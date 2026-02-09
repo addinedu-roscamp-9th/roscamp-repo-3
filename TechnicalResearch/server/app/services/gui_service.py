@@ -12,5 +12,14 @@ def login(data):
     return False
 
 
+def fetch(data):
+    item = data["item"]
+    location = data["location"]
 
+    print(f'item: {item}')
+    print(f'location: {location}')
 
+    # TODO: send item to jetcobot(server)
+    # TODO: send location to pinky
+
+    return "foo"
