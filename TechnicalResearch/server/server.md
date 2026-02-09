@@ -2,7 +2,6 @@
 
 - [Project Structure](#project-structure)
 - [Environments](#environments)
-- [API Endpoints](#api-endpoints)
 
 ---
 
@@ -11,35 +10,35 @@
 ```
 project/
 ├── app/
-│   ├── routers/     ← API endpoints (handles requests)
-│   ├── services/    ← Business logic
-│   └── models/      ← Data structures (Pydantic)
-├── main.py          ← App entry point
-└── requirements.txt
+│   ├── routers/     ←  API endpoints (handles requests)
+│   ├── services/    ←  Business logic
+│   ├── models/      ←  Data structures (Pydantic)
+│   └── main.py      ←  App entry point
+└── run.py       ←  Run this to start the server
 ```
 
 ---
 
-## Environments
+## Environment
 
-Source the `venv_setup.sh` script to effect the current shell:
+Run the `venv_setup.sh` script
 
 ```sh
-source ./venv_setup.sh
+./venv_setup.sh
 ```
 
-1. Create venv named `.venv`
-2. Start venv
-3. Install PIP modules
-4. Install APT package
+1. Creates `.venv` at current directory
+2. Updates PIP
+3. Install required packages
 
-> Just running the script will execute is in the subshell which will not effect current shell.
-> Which means the venv will not be activated on current shell when ran with `./venv_setup.sh`.
+Check `.venv` created:
 
----
+```sh
+ls -a # or $ la
+```
 
-## API Endpoints
+Start the venv:
 
-| Method | URL          | Description        |
-| ------ | ------------ | ------------------ |
-| POST   | `/jetcobot/` | Robot sends status |
+```sh
+source .venv/bin/activate
+```

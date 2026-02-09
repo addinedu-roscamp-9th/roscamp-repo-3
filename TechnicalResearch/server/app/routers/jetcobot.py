@@ -1,4 +1,5 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from pydantic import ValidationError
 
 from app.models.robots_model import RobotsData
 from app.services import jetcobot_service
@@ -18,6 +19,7 @@ async def jetcobot_connection_test(websocket: WebSocket):
             await websocket.send_json(result)
     except WebSocketDisconnect:
         print("Client disconnected normally")
-    except Exception as e:
-        print(f"WebSocket error: {e}")
-    # Don't manually call close() - FastAPI handles it
+    except ValidationError as e:
+        print(f"Invalid data format from client: {e}")
+    except ValueError as e:
+        print(f"Service error: {e}")

@@ -1,8 +1,8 @@
 # Jetcobot
 
 - [Dot Env](#dot-env)
-- [Dependency](#dependency)
 - [Environment](#environment)
+- [WebSocket Usage](#websocket-usage)
 
 ---
 
@@ -22,39 +22,98 @@ GATEWAY_PORT=8000
 ENDPOINT=jetcobot
 ```
 
-> Change the `GATEWAY_HOST` value as you needed
-
-Or with echo command:
+Run `ip a` command from terminal to where the server is running
 
 ```sh
-echo -e 'GATEWAY_HOST=192.168.0.56\nGATEWAY_PORT=8000\nENDPOINT=jetcobot' >> .env
+ip a
 ```
 
----
-
-## Dependency
-
-Installed dependencies
-
-- pymycobot
-- numpy
-- pydantic
-- requests
+> Change the `GATEWAY_HOST` value as you needed
 
 ---
 
 ## Environment
 
-Source the `venv_setup.sh` script to effect the current shell:
+Run the `venv_setup.sh` script
 
 ```sh
-source ./venv_setup.sh
+./venv_setup.sh
 ```
 
-1. Create venv named `.venv`
-2. Start venv
-3. Install PIP modules
-4. Install APT package
+1. Creates `.venv` at current directory
+2. Updates PIP
+3. Install required packages
 
-> Just running the script will execute is in the subshell which will not effect current shell.
-> Which means the venv will not be activated on current shell when ran with `./venv_setup.sh`.
+Check `.venv` created:
+
+```sh
+ls -a # or $ la
+```
+
+Start the venv:
+
+```sh
+source .venv/bin/activate
+```
+
+---
+
+## WebSocket Usage
+
+A WebSocket client for connecting Jetcobot robots to the control server.
+
+### Setup
+
+Install dependencies:
+
+```bash
+pip install websockets
+```
+
+### Basic Connection
+
+```python
+import asyncio
+import json
+from websockets import connect
+
+async def connect_to_jetcobot():
+    robot_id = "jetcobot_001"
+    uri = f"ws://localhost:8000/jetcobot/ws/{robot_id}"
+
+    async with connect(uri) as websocket:
+        print(f"Connected as {robot_id}")
+
+        # Your code here
+```
+
+### Sending Messages
+
+```python
+# declare msg to send
+ping_msg = {
+    "type": "ping",
+    "timestamp": "2024-02-06T10:00:00Z"
+}
+
+# msg into json and send
+# await: wait until sent
+await websocket.send(json.dumps(ping_msg))
+```
+
+### Receiving Messages
+
+```python
+# Receive a single message
+response = await websocket.recv()
+response_data = json.loads(response)
+print(f"Received: {response_data}")
+
+# Listen with timeout
+try:
+    response = await asyncio.wait_for(websocket.recv(), timeout=5.0)
+    response_data = json.loads(response)
+    print(f"Received: {response_data}")
+except asyncio.TimeoutError:
+    print("No messages received (timeout)")
+```

@@ -3,7 +3,7 @@
 
 use home_ai;
 
-drop table if exists logs;
+drop table if exists history;
 drop table if exists schedules;
 drop table if exists users;
 drop table if exists robots;
@@ -56,10 +56,14 @@ create table items (
         frequency int default 0
     );
 
+insert into items values ('i2602070001', 'choco stick', 10, 3);
+
 create table commands (
         cmd_id   varchar(11) primary key,
         cmd_type varchar(30) not null
     );
+
+insert into commands values ('c2602070001', 'bring_it_here');
 
 create table positions (
         position_id   varchar(11) primary key,
@@ -68,6 +72,8 @@ create table positions (
         y             float not null,
         theta         float not null
     );
+
+insert into positions values ('p2602070001', 'drop zone', '1.0', '2.0', '3.0');
 
 create table postures (
         pos_id   varchar(11) primary key,
@@ -101,8 +107,10 @@ create table schedules (
         foreign key (position_id) references positions (position_id)
     );
 
-create table logs (
-        log_id         varchar(11) primary key,
+insert into schedules values ('s2602070001', 'c2602070001', 'i2602070001', 'p2602070001', '15:40', 1, True);
+
+create table history (
+        history_id     varchar(11) primary key,
         user_id        varchar(30),
         item_id        varchar(11),
         robot_1        varchar(11),
