@@ -8,6 +8,7 @@ set -euo pipefail
 
 pip_packages=(
   "ultralytics"
+  "opencv-python"
 )
 
 # create venv if not already created
