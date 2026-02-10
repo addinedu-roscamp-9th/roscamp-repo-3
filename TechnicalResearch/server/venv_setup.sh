@@ -12,6 +12,7 @@ pip_packages=(
   "httpx"
   "jinja2"
   "multipart"
+  "dotenv"
   "numpy"
   "opencv-python"
   "pymysql"
