@@ -1,6 +1,7 @@
-from app.services import gui_service
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from pydantic import ValidationError
+
+from app.services import gui_service
 
 router = APIRouter()
 
@@ -59,5 +60,9 @@ def gui_controller(msg):
 
         case "schedule_info":
             result = gui_service.schedule_info()
+
+        case "schedule_edit":
+            result = gui_service.schedule_edit(data)
+
         case _:
             return {"status": "error", "error": f"Unknown msg_type: {msg_type}"}

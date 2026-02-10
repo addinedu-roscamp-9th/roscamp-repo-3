@@ -108,3 +108,52 @@ def schedule_info():
         for s in schedules
     ]
 
+
+# {
+#     msg_type: schedule_edit,
+#     data: {
+#         action: edit,
+#         schedule_id: s2602100001,
+#         cmd_id: c2602100001,
+#         item_id: i2602100001,
+#         position_id: p2602100001,
+#         ececute_time: 15:40:00,
+#         cycle: 1,
+#         on_weekends: false,
+#     }
+# }
+
+
+def schedule_edit(data):
+    action = data["action"]
+    success = "false"
+    match action:
+        case "add":
+            result = schedule_mapper.insert_schedule(data)
+            if result is not None:
+                success = "true"
+            return {
+                "msg_type": "add",
+                "success": success,
+            }
+
+        case "edit":
+            result = schedule_mapper.update_schedule(data)
+            if result is not None:
+                success = "true"
+            return {
+                "msg_type": "edit",
+                "success": success,
+            }
+
+        case "delete":
+            result = schedule_mapper.delete_schedule(data)
+            if result is not None:
+                success = "true"
+            return {
+                "msg_type": "delete",
+                "success": success,
+            }
+
+        case _:
+            return None
