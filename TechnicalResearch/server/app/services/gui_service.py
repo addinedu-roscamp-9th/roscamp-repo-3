@@ -1,7 +1,13 @@
+import os
+
 import httpx
 
 from app.database import gui_mapper
 from app.services import pinky_service
+
+# Jetcobot configuration - use localhost for testing, can override via env var
+JETCOBOT_HOST = os.getenv("JETCOBOT_HOST", "192.168.0.56")
+JETCOBOT_PORT = os.getenv("JETCOBOT_PORT", "8080")
 
 
 def login(data):
@@ -50,13 +56,12 @@ def fetch_cmd(data):
     item = data["item"]
     position = data["position"]
 
-    print('gui_service.py')
+    print("gui_service.py")
     print(f"item: {item}")
     print(f"position: {position}")
 
-    """
     # Send item to jetcobot
-    jetcobot_url = "http://192.168.0.22:8080/pose"
+    jetcobot_url = f"http://{JETCOBOT_HOST}:{JETCOBOT_PORT}/pose"
 
     try:
         with httpx.Client(timeout=60.0) as client:
@@ -67,17 +72,13 @@ def fetch_cmd(data):
     except httpx.HTTPError as e:
         print(f"Error sending to jetcobot: {e}")
         return {"status": "error", "message": f"Failed to send to jetcobot: {str(e)}"}
-    """
 
     # TODO: send position to pinky
     pinky_res = pinky_service.send_position(position)
     print(pinky_res)
 
-    """
     return {
         "status": "success",
         "message": "Item sent to jetcobot",
         "jetcobot_response": jetcobot_result,
     }
-    """
-    return "Return from gui_service.py"
