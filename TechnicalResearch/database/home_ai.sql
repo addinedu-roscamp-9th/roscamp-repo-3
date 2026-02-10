@@ -63,7 +63,8 @@ create table commands (
         cmd_type varchar(30) not null
     );
 
-insert into commands values ('c2602070001', 'bring_it_here');
+insert into commands values ('c2602070001', 'fetch');
+insert into commands values ('c2602100002', 'take');
 
 create table positions (
         position_id   varchar(11) primary key,
@@ -73,7 +74,10 @@ create table positions (
         theta         float not null
     );
 
-insert into positions values ('p2602070001', 'drop zone', '1.0', '2.0', '3.0');
+insert into positions values ('p2602070001', 'drop zone', 0.2269, 0.2037, 0.7076);
+insert into positions values ('p2602100001', 'charger', 0.0, 0.0, 0.0);
+insert into positions values ('p2602100002', 'living room', 4.0, 5.0, 6.0);
+insert into positions values ('p2602100003', 'bed room', 7.0, 8.0, 9.0);
 
 create table postures (
         pos_id   varchar(11) primary key,
@@ -107,7 +111,7 @@ create table schedules (
         foreign key (position_id) references positions (position_id)
     );
 
-insert into schedules values ('s2602070001', 'c2602070001', 'i2602070001', 'p2602070001', '15:40', 1, True);
+insert into schedules values ('s2602070001', 'c2602070001', 'i2602070001', 'p2602070001', '15:40:00', 1, True);
 
 create table history (
         history_id     varchar(11) primary key,
