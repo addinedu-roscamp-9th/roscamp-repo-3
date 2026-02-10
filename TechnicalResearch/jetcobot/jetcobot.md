@@ -7,7 +7,7 @@
 
 ## Dot Env
 
-Create `.env` file at same path as `run.py`:
+Create `.env` file at same path as `main.py`:
 
 ```sh
 touch .env
@@ -22,10 +22,6 @@ code .env
 Add the following inside the `.env`:
 
 ```sh
-JETCOBOT_HOST=0.0.0.0
-JETCOBOT_PORT=8080
-JETCOBOT_DEBUG=true
-
 GATEWAY_HOST=192.168.0.56
 GATEWAY_PORT=8000
 ENDPOINT=jetcobot
