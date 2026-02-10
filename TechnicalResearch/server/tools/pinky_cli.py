@@ -1,13 +1,12 @@
 """
-pinky_cli.py
-
-터미널에서 입력한 명령을
-핑키 로봇 명령(JSON)으로 변환해서 서버로 전송하는 CLI 도구
+핑키에게 전달한 명령 입력창 실행
+명령은 서버를 통해 핑키에게 전달된다
 """
 
 import requests
 
 SERVER_URL = "http://192.168.0.52:8000/pinky/robot/cmd/pinky_01"
+
 
 def main():
     print("핑키 CLI 시작")
@@ -15,22 +14,14 @@ def main():
     print("종료: exit")
 
     while True:
-        # 터미널 입력 받기
         user_input = input(">> ").strip().lower()
 
         if user_input == "exit":
             print("종료합니다.")
             break
 
-        # -------------------------
-        # 명령 번역
-        # -------------------------
         if user_input == "move":
-            # 기계가 이해할 수 있는 명령
-            cmd = {
-                "type": "move",
-                "distance_cm": 10
-            }
+            cmd = {"type": "move", "distance_cm": 10}
 
             try:
                 res = requests.post(SERVER_URL, json=cmd, timeout=1.0)
@@ -41,6 +32,6 @@ def main():
         else:
             print("알 수 없는 명령입니다.")
 
+
 if __name__ == "__main__":
     main()
-
