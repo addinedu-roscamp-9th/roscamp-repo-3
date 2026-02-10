@@ -1,13 +1,15 @@
 import os
 
 import httpx
+from dotenv import load_dotenv
 
 from app.database import gui_mapper
 from app.services import pinky_service
 
-# Jetcobot configuration - use localhost for testing, can override via env var
+load_dotenv()
+
 JETCOBOT_HOST = os.getenv("JETCOBOT_HOST", "192.168.0.56")
-JETCOBOT_PORT = os.getenv("JETCOBOT_PORT", "8080")
+JETCOBOT_PORT = int(os.getenv("JETCOBOT_PORT", "8080"))
 
 
 def login(data):
@@ -64,8 +66,11 @@ def fetch_cmd(data):
     jetcobot_url = f"http://{JETCOBOT_HOST}:{JETCOBOT_PORT}/pose"
 
     try:
+        msg_type = "fetch"
         with httpx.Client(timeout=60.0) as client:
-            response = client.post(jetcobot_url, json={"item": item})
+            response = client.post(
+                jetcobot_url, json={"msg_type": msg_type, "item": item}
+            )
             response.raise_for_status()
             jetcobot_result = response.json()
             print(f"Jetcobot response: {jetcobot_result}")
