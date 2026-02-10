@@ -14,7 +14,11 @@ async def test_fetch_cmd():
         # Send fetch_cmd request
         message = {
             "msg_type": "fetch_cmd",
-            "data": {"item": "choco", "position": {"x": 1.5, "y": 2.0, "theta": 0.0}},
+            "data": {
+                "item": "choco",
+                # DZ grid
+                "position": {"x": 0.2269, "y": 0.2037, "theta": 0.7076},
+            },
         }
 
         await websocket.send(json.dumps(message))
