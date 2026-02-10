@@ -4,8 +4,8 @@ import threading
 import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI
-from pydantic import BaseModel
 
+from app.model.msg_model import ServerMsg
 from app.model.posture_model import PosturesData
 from app.service.connect import Connect
 from app.service.movement import Move
@@ -27,23 +27,22 @@ postures_map = {}
 app = FastAPI()
 
 
-class PoseRequest(BaseModel):
-    """Request model for pose endpoint."""
-
-    item: str
-
-
 @app.post("/pose")
-async def handle_pose(request: PoseRequest):
-    """Receive item from server and execute pose."""
-    print(f"Received pose request for item: {request.item}")
+async def handle_pose(request: ServerMsg):
+    msg_type = request.msg_type
+    print(f"msg_type: {msg_type}")
+    print(f"item: {request.item}")
+
+    match msg_type:
+        case "fetch":
+            posture = postures_map.get("shelve_side")
+        case "take":
+            posture = postures_map.get("pinky_side")
 
     try:
         if move_controller is None:
             return {"status": "error", "message": "Robot arm not initialized"}
 
-        # Find posture by item name
-        posture = postures_map.get(request.item)
         if posture is None:
             return {
                 "status": "error",
