@@ -1,5 +1,5 @@
 from app.database.connection import SessionLocal
-from app.models.database import Posture
+from app.models.tables import Posture
 
 
 def select_all_pos():

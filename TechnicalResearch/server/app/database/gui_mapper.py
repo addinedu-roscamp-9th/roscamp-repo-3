@@ -1,5 +1,5 @@
 from app.database.connection import SessionLocal
-from app.models.database import Item, Position, User
+from app.models.tables import Item, Position, User
 
 
 def login_user(user_id, user_pw):
