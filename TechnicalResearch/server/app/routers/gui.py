@@ -58,11 +58,21 @@ def gui_controller(msg):
             result = gui_service.fetch_cmd(data)
             return result
 
+        case "take_info":
+            result = gui_service.take_info()
+            return result
+
+        case "take_cmd":
+            result = gui_service.take_cmd()
+            return result
+
         case "schedule_info":
             result = gui_service.schedule_info()
+            return result
 
         case "schedule_edit":
             result = gui_service.schedule_edit(data)
+            return result
 
         case _:
             return {"status": "error", "error": f"Unknown msg_type: {msg_type}"}

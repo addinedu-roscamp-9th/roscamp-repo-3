@@ -78,6 +78,8 @@ def fetch_cmd(data):
         print(f"Error sending to jetcobot: {e}")
         return {"status": "error", "message": f"Failed to send to jetcobot: {str(e)}"}
 
+    # TODO: first send pinky to DZ
+
     # TODO: send position to pinky
     pinky_res = pinky_service.send_position(position)
     print(pinky_res)
@@ -88,6 +90,32 @@ def fetch_cmd(data):
         "jetcobot_response": jetcobot_result,
     }
 
+
+# position_id = Column(String(11), primary_key=True)
+# position_name = Column(String(30), nullable=False)
+# x = Column(Float, nullable=False)
+# y = Column(Float, nullable=False)
+# theta = Column(Float, nullable=False)
+
+
+def take_info():
+    positions = gui_mapper.take_info()
+    if positions is None:
+        return []
+    return [
+        {
+            "position_id": p.position_id,
+            "position_name": p.position_name,
+            "x": p.x,
+            "y": p.y,
+            "theta": p.theta,
+        }
+        for p in positions
+    ]
+
+# TODO: implement take_cmd logic
+def take_cmd():
+    return "Hello, from take_cmd()"
 
 def schedule_info():
     schedules = schedule_mapper.select_all_schedules()

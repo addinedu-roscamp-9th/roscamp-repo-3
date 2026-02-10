@@ -34,3 +34,17 @@ def fetch_info():
 
     finally:
         db.close()
+
+
+def take_info():
+    db = SessionLocal()
+    try:
+        positions = db.query(Position).all()
+
+        if positions is None:
+            return None
+
+        return positions
+
+    finally:
+        db.close()
