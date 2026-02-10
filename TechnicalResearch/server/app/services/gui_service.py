@@ -3,7 +3,7 @@ import os
 import httpx
 from dotenv import load_dotenv
 
-from app.database import gui_mapper
+from app.database import gui_mapper, schedule_mapper
 from app.services import pinky_service
 
 load_dotenv()
@@ -87,3 +87,24 @@ def fetch_cmd(data):
         "message": "Item sent to jetcobot",
         "jetcobot_response": jetcobot_result,
     }
+
+
+def schedule_info():
+    schedules = schedule_mapper.select_all_schedules()
+
+    if not schedules:
+        return []
+
+    return [
+        {
+            "schedule_id": s.schedule_id,
+            "cmd_id": s.cmd_id,
+            "item_id": s.item_id,
+            "position_id": s.position_id,
+            "execute_time": s.execute_time.strftime("%H:%M:%S"),
+            "cycle": s.cycle,
+            "on_weekends": s.on_weekends,
+        }
+        for s in schedules
+    ]
+
