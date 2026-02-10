@@ -78,12 +78,12 @@ insert into positions values ('p2602070001', 'drop zone', '1.0', '2.0', '3.0');
 create table postures (
         pos_id   varchar(11) primary key,
         pos_name varchar(30) not null,
-        j1       int not null,
-        j2       int not null,
-        j3       int not null,
-        j4       int not null,
-        j5       int not null,
-        j6       int not null,
+        j1       float not null,
+        j2       float not null,
+        j3       float not null,
+        j4       float not null,
+        j5       float not null,
+        j6       float not null,
         gap      int not null
     );
 

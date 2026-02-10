@@ -68,12 +68,12 @@ class Posture(Base):
 
     pos_id = Column(String(11), primary_key=True)
     pos_name = Column(String(30), nullable=False)
-    j1 = Column(Integer, nullable=False)
-    j2 = Column(Integer, nullable=False)
-    j3 = Column(Integer, nullable=False)
-    j4 = Column(Integer, nullable=False)
-    j5 = Column(Integer, nullable=False)
-    j6 = Column(Integer, nullable=False)
+    j1 = Column(Float, nullable=False)
+    j2 = Column(Float, nullable=False)
+    j3 = Column(Float, nullable=False)
+    j4 = Column(Float, nullable=False)
+    j5 = Column(Float, nullable=False)
+    j6 = Column(Float, nullable=False)
     gap = Column(Integer, nullable=False)
 
 
