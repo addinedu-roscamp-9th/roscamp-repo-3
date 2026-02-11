@@ -6,6 +6,7 @@ import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI
 
+from app.controller.controller import Controller
 from app.model.posture import Posture
 from app.service.connect_gateway import Connect
 from app.service.move import Move
@@ -26,7 +27,20 @@ app = FastAPI()
 
 @app.post("/pose")
 async def handle_pose(req: List[Posture]):
-    print(req)
+    try:
+        if move is None:
+            return {"success": False, "error": "Arm not initialized"}
+
+        print(f"Received {len(req)} postures from server")
+        controller = Controller(req, move)
+        controller.execute()
+
+        print("Successfully executed all postures")
+        return {"success": True, "message": "All postures executed successfully"}
+
+    except Exception as e:
+        print(f"Error executing postures: {e}")
+        return {"success": False, "error": str(e)}
 
 
 def run_http_server():
