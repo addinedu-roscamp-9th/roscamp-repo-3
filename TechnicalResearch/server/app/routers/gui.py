@@ -38,10 +38,10 @@ async def jetcobot_connection_test(websocket: WebSocket):
 
 
 def gui_controller(msg):
-    msg_type = msg["msg_type"]
+    msg = msg["msg"]
     data = msg["data"]
 
-    match msg_type:
+    match msg:
         case "connect":
             return True
 
@@ -50,7 +50,7 @@ def gui_controller(msg):
             print(user_name)
             return user_name
 
-        case "fetch":
+        case "fetch_req":
             what_where = gui_service.fetch_info()
             return what_where
 
@@ -58,7 +58,7 @@ def gui_controller(msg):
             result = gui_service.fetch_cmd(data)
             return result
 
-        case "take_info":
+        case "take_req":
             result = gui_service.take_info()
             return result
 
@@ -66,7 +66,7 @@ def gui_controller(msg):
             result = gui_service.take_cmd()
             return result
 
-        case "schedule_info":
+        case "schedule_req":
             result = gui_service.schedule_info()
             return result
 
@@ -74,5 +74,8 @@ def gui_controller(msg):
             result = gui_service.schedule_edit(data)
             return result
 
+        case "history_req":
+            pass
+
         case _:
-            return {"status": "error", "error": f"Unknown msg_type: {msg_type}"}
+            return {"status": "error", "error": f"Unknown msg_type: {msg}"}

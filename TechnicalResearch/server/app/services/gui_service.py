@@ -1,9 +1,10 @@
 import os
 
 import httpx
+from dotenv import load_dotenv
+
 from app.database import gui_mapper, schedule_mapper
 from app.services import pinky_service
-from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -53,6 +54,41 @@ def fetch_info():
     }
 
 
+DEFAULT_POS = [5.36, 121.99, -140.09, -24.69, 6.41, -126.82]
+READY_POS = [50.2, 116.0, 311.6, -160.96, -5.67, 48.23]
+PICK_POS = [33.2, 241.5, 114.7, -168.73, 7.76, 45.65]
+PLACE_POS = [265.2, 45.4, 42.8, -174.55, 14.04, -35.09]
+
+
+def create_posture(angles, gap=50):
+    """Convert position array to Posture format for jetcobot/arm"""
+    return {
+        "j1": angles[0],
+        "j2": angles[1],
+        "j3": angles[2],
+        "j4": angles[3],
+        "j5": angles[4],
+        "j6": angles[5],
+        "gap": gap,
+    }
+
+
+def send_postures_to_jetcobot(postures):
+    """Send list of postures to jetcobot arm service"""
+    jetcobot_url = f"http://{JETCOBOT_HOST}:{JETCOBOT_PORT}/pose"
+
+    try:
+        with httpx.Client(timeout=60.0) as client:
+            response = client.post(jetcobot_url, json=postures)
+            response.raise_for_status()
+            result = response.json()
+            print(f"Jetcobot response: {result}")
+            return result
+    except httpx.HTTPError as e:
+        print(f"Error sending to jetcobot: {e}")
+        return {"success": False, "error": str(e)}
+
+
 def fetch_cmd(data):
     item = data["item"]
     position = data["position"]
@@ -61,21 +97,21 @@ def fetch_cmd(data):
     print(f"item: {item}")
     print(f"position: {position}")
 
-    # Send item to jetcobot
-    jetcobot_url = f"http://{JETCOBOT_HOST}:{JETCOBOT_PORT}/pose"
+    # Create pick sequence for fetching item
+    pick_sequence = [
+        create_posture(DEFAULT_POS, gap=100),  # Start at default, gripper open
+        create_posture(READY_POS, gap=100),    # Move to ready position
+        create_posture(PICK_POS, gap=100),     # Move to pick position, gripper open
+        create_posture(PICK_POS, gap=50),      # Close gripper to grab item
+        create_posture(READY_POS, gap=50),     # Lift item to ready position
+    ]
 
-    try:
-        msg_type = "fetch"
-        with httpx.Client(timeout=60.0) as client:
-            response = client.post(
-                jetcobot_url, json={"msg_type": msg_type, "item": item}
-            )
-            response.raise_for_status()
-            jetcobot_result = response.json()
-            print(f"Jetcobot response: {jetcobot_result}")
-    except httpx.HTTPError as e:
-        print(f"Error sending to jetcobot: {e}")
-        return {"status": "error", "message": f"Failed to send to jetcobot: {str(e)}"}
+    # Send postures to jetcobot
+    jetcobot_result = send_postures_to_jetcobot(pick_sequence)
+
+    if not jetcobot_result.get("success"):
+        error_msg = jetcobot_result.get("error", "Unknown error")
+        return {"status": "error", "message": f"Failed to execute pick sequence: {error_msg}"}
 
     # TODO: first send pinky to DZ
 
@@ -85,7 +121,7 @@ def fetch_cmd(data):
 
     return {
         "status": "success",
-        "message": "Item sent to jetcobot",
+        "message": "Pick sequence completed and position sent to pinky",
         "jetcobot_response": jetcobot_result,
     }
 
