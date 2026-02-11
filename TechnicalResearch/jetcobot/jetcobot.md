@@ -22,18 +22,19 @@ code .env
 Add the following inside the `.env`:
 
 ```sh
-GATEWAY_HOST=192.168.0.56
+GATEWAY_HOST="192.168.0.56"
 GATEWAY_PORT=8000
-ENDPOINT=jetcobot
+ENDPOINT="jetcobot"
+
+AI_HOST="192.168.0.56"
+AI_PORT=9000
 ```
 
-Run `ip a` command from terminal to where the gateway server is running
+Find where the `GATEWAY` or `AI` server is running at:
 
 ```sh
 ip a
 ```
-
-> Change the `GATEWAY_HOST` value as you needed
 
 ---
 

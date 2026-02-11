@@ -10,6 +10,7 @@ pip_packages=(
   "dotenv"
   "fastapi"
   "numpy"
+  "opencv-python"
   "pydantic"
   "pymycobot"
   "requests"

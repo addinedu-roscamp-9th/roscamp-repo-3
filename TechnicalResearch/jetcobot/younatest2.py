@@ -1,13 +1,19 @@
-import cv2
 import base64
 import json
+import os
 import socket
-import time
 import threading
+import time
 
-PC_IP = "192.168.5.3"
-PC_PORT = 9000
-RECV_PORT = 9001   # ⬅ 좌표 수신 포트
+import cv2
+from dotenv import load_dotenv
+
+load_dotenv()
+
+AI_HOST = os.getenv("AI_HOST", "192.168.5.3")
+AI_PORT = int(os.getenv("AI_PORT", "9000"))
+RECV_PORT = 9001  # ⬅ 좌표 수신 포트
+
 
 # ================= [좌표 수신 스레드] =================
 def recv_coords():
@@ -22,6 +28,7 @@ def recv_coords():
             f"\n🎯 인식 물체: {payload['class']} | "
             f"cx={payload['cx']} cy={payload['cy']}"
         )
+
 
 threading.Thread(target=recv_coords, daemon=True).start()
 
@@ -42,11 +49,9 @@ while True:
     send_frame = cv2.resize(frame, (320, 240))
     _, encoded = cv2.imencode(".jpg", send_frame, [cv2.IMWRITE_JPEG_QUALITY, 60])
 
-    payload = json.dumps({
-        "image": base64.b64encode(encoded).decode("utf-8")
-    })
+    payload = json.dumps({"image": base64.b64encode(encoded).decode("utf-8")})
 
-    sock.sendto(payload.encode(), (PC_IP, PC_PORT))
+    sock.sendto(payload.encode(), (AI_HOST, AI_PORT))
 
     now = time.time()
     fps = 1 / (now - prev_time)

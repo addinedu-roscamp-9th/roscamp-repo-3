@@ -1,15 +1,14 @@
 import os
 
 import httpx
-from dotenv import load_dotenv
-
 from app.database import gui_mapper, schedule_mapper
 from app.services import pinky_service
+from dotenv import load_dotenv
 
 load_dotenv()
 
 JETCOBOT_HOST = os.getenv("JETCOBOT_HOST", "192.168.0.56")
-JETCOBOT_PORT = int(os.getenv("JETCOBOT_PORT", "8080"))
+JETCOBOT_PORT = int(os.getenv("JETCOBOT_PORT", "8001"))
 
 
 def login(data):
@@ -113,9 +112,11 @@ def take_info():
         for p in positions
     ]
 
+
 # TODO: implement take_cmd logic
 def take_cmd():
     return "Hello, from take_cmd()"
+
 
 def schedule_info():
     schedules = schedule_mapper.select_all_schedules()

@@ -2,13 +2,12 @@ import os
 import threading
 
 import uvicorn
-from dotenv import load_dotenv
-from fastapi import FastAPI
-
 from app.model.msg_model import ServerMsg
 from app.model.posture_model import PosturesData
 from app.service.connect import Connect
 from app.service.movement import Move
+from dotenv import load_dotenv
+from fastapi import FastAPI
 
 load_dotenv()
 
@@ -16,8 +15,8 @@ GATEWAY_HOST = os.getenv("GATEWAY_HOST", "192.168.0.56")
 GATEWAY_PORT = int(os.getenv("GATEWAY_PORT", "8000"))
 ENDPOINT = os.getenv("ENDPOINT", "jetcobot")
 
-HTTP_HOST = os.getenv("HTTP_HOST", "0.0.0.0")
-HTTP_PORT = int(os.getenv("HTTP_PORT", "8080"))
+HTTP_HOST = "0.0.0.0"
+HTTP_PORT = 8001
 
 # Global state
 move_controller = None
