@@ -14,7 +14,6 @@ async def jetcobot_connection_test(websocket: WebSocket):
         while True:
             msg = await websocket.receive_json()
 
-            # commands from gui are handled from controller
             result = gui_controller(msg)
 
             await websocket.send_json(result)
@@ -24,17 +23,6 @@ async def jetcobot_connection_test(websocket: WebSocket):
         print(f"Invalid data format from client: {e}")
     except ValueError as e:
         print(f"Service error: {e}")
-
-
-# msg example from gui
-#
-# {
-#     "msg_type": "login",
-#     "data": {
-#         "id": "admin",
-#         "pw": "1234"
-#     }
-# }
 
 
 def gui_controller(msg):
