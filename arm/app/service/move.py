@@ -1,6 +1,6 @@
 import time
 
-from pymycobot.mycobot280 import MyCobot280
+from pymycobot.mycobot import MyCobot
 
 from app.model.posture import Posture
 
@@ -11,7 +11,7 @@ SPEED = 30
 
 class Move:
     def __init__(self, port: str = PORT, baud: str = BAUD):
-        self.mc = MyCobot280(port, baud)
+        self.mc = MyCobot(port, baud)
 
     def send_angles(self, data: Posture, speed: int = SPEED):
         angles = [data.j1, data.j2, data.j3, data.j4, data.j5, data.j6]
