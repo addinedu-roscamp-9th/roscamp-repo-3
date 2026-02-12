@@ -1,5 +1,5 @@
 from app.database.connection import SessionLocal
-from app.models.tables import Item, Position, User
+from app.models.tables import History, Item, Position, Posture, User
 
 
 def login_user(user_id, user_pw):
@@ -46,5 +46,45 @@ def take_info():
 
         return positions
 
+    finally:
+        db.close()
+
+
+def history_info():
+    db = SessionLocal()
+    try:
+        return db.query(History).all()
+    finally:
+        db.close()
+
+
+def select_posture_by_id(item_id):
+    db = SessionLocal()
+    try:
+        return (
+            db.query(
+                Posture.j1,
+                Posture.j2,
+                Posture.j3,
+                Posture.j4,
+                Posture.j5,
+                Posture.j6,
+                Posture.gap,
+            )
+            .filter(item_id)
+            .first()
+        )
+    finally:
+        db.close()
+
+
+def select_position_by_id(pos_id):
+    db = SessionLocal()
+    try:
+        return (
+            db.query(Position.x, Position.y, Position.w)
+            .filter(Position.position_id == pos_id)
+            .first()
+        )
     finally:
         db.close()

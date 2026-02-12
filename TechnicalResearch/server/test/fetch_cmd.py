@@ -1,33 +1,55 @@
-"""Test script to send fetch_cmd request to /gui WebSocket endpoint."""
-
 import asyncio
 import json
+import sys
 
 import websockets
 
 
-async def test_fetch_cmd():
-    """Connect to GUI WebSocket and send fetch_cmd."""
+async def test_fetch_cmd(item_id="i2602120001", position_id="p2602120001"):
     uri = "ws://localhost:8000/gui"
 
-    async with websockets.connect(uri) as websocket:
-        # Send fetch_cmd request
-        message = {
-            "msg_type": "fetch_cmd",
-            "data": {
-                "item": "choco",
-                # DZ grid
-                "position": {"x": 0.2269, "y": 0.2037, "theta": 0.7076},
-            },
-        }
+    try:
+        async with websockets.connect(uri) as websocket:
+            message = {
+                "msg": "fetch_cmd",
+                "data": {
+                    "item_id": item_id,
+                    "position_id": position_id,
+                },
+            }
 
-        await websocket.send(json.dumps(message))
-        print(f"Sent: {json.dumps(message, indent=2)}")
+            await websocket.send(json.dumps(message))
+            print(f"Sent: {json.dumps(message, indent=2)}")
 
-        # Receive response
-        response = await websocket.recv()
-        print(f"\nReceived: {json.dumps(json.loads(response), indent=2)}")
+            # Receive response
+            response = await websocket.recv()
+            response_data = json.loads(response)
+            print(f"\nReceived: {json.dumps(response_data, indent=2)}")
+
+            # Check if there was an error
+            if response_data.get("msg") == "error":
+                print("\n❌ Error:", response_data.get("data"))
+                return False
+
+            print("\n✓ Fetch command sent successfully!")
+            return True
+
+    except websockets.exceptions.WebSocketException as e:
+        print(f"\n❌ WebSocket error: {e}")
+        print("Make sure the server is running on localhost:8000")
+        return False
+    except json.JSONDecodeError as e:
+        print(f"\n❌ JSON decode error: {e}")
+        return False
+    except Exception as e:
+        print(f"\n❌ Unexpected error: {e}")
+        return False
 
 
 if __name__ == "__main__":
-    asyncio.run(test_fetch_cmd())
+    # Allow command line arguments for item and position
+    item = sys.argv[1] if len(sys.argv) > 1 else "i2602120001"
+    position = sys.argv[2] if len(sys.argv) > 2 else "p2602120001"
+
+    success = asyncio.run(test_fetch_cmd(item, position))
+    sys.exit(0 if success else 1)

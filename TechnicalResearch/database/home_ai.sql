@@ -71,7 +71,7 @@ create table positions (
         position_name varchar(30) not null,
         x             float not null,
         y             float not null,
-        theta         float not null
+        w         float not null
     );
 
 insert into positions values ('p2602070001', 'drop zone', 0.2269, 0.2037, 0.7076);

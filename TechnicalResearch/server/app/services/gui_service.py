@@ -1,9 +1,11 @@
 import os
+from typing import List
 
 import httpx
 from dotenv import load_dotenv
 
 from app.database import gui_mapper, schedule_mapper
+from app.models.tables import History
 from app.services import pinky_service
 
 load_dotenv()
@@ -18,9 +20,7 @@ def login(data):
 
     user_name = gui_mapper.login_user(user_id, user_pw)
 
-    if user_name is not None:
-        return user_name
-    return False
+    return {"user_name": user_name}
 
 
 def fetch_info():
@@ -90,6 +90,14 @@ def send_postures_to_jetcobot(postures) -> bool:
         return False
 
 
+def get_pos_grid(pos_id):
+    result = gui_mapper.select_position_by_id(pos_id)
+    if result is None:
+        return None
+    x, y, w = result
+    return x, y, w
+
+
 def fetch_cmd(data):
     msg = "fetch_cmd"
     item = data["item"]
@@ -112,35 +120,42 @@ def fetch_cmd(data):
     is_success: bool = send_postures_to_jetcobot(pick_sequence)
 
     if is_success is False:
-        return {"msg": msg, "data": {"success": is_success}}
+        print("Failed to pick up the item")
+        return {"success": False}
 
     # TODO: first send pinky to DZ
+    if is_success is False:
+        print("Failed to drop the item")
+        return {"success": False}
 
     # TODO: send position to pinky
     pinky_res = pinky_service.send_position(position)
     print(pinky_res)
 
-    return {"msg": msg, "data": {"success": True}}
+    return {"success": True}
 
 
 def take_info():
     positions = gui_mapper.take_info()
     if positions is None:
         return []
-    return [
-        {
-            "position_id": p.position_id,
-            "position_name": p.position_name,
-            "x": p.x,
-            "y": p.y,
-            "theta": p.theta,
-        }
-        for p in positions
-    ]
+    return {
+        "position": [
+            {
+                "position_id": p.position_id,
+                "position_name": p.position_name,
+                "x": p.x,
+                "y": p.y,
+                "w": p.w,
+            }
+            for p in positions
+        ]
+    }
 
 
 # TODO: implement take_cmd logic
-def take_cmd():
+def take_cmd(data):
+    print(f"gui_service.take_cmd data: {data}")
     return "Hello, from take_cmd()"
 
 
@@ -150,22 +165,23 @@ def schedule_info():
     if not schedules:
         return []
 
-    return [
-        {
-            "schedule_id": s.schedule_id,
-            "cmd_id": s.cmd_id,
-            "item_id": s.item_id,
-            "position_id": s.position_id,
-            "execute_time": s.execute_time.strftime("%H:%M:%S"),
-            "cycle": s.cycle,
-            "on_weekends": s.on_weekends,
-        }
-        for s in schedules
-    ]
+    return {
+        "schedules": [
+            {
+                "schedule_id": s.schedule_id,
+                "cmd_id": s.cmd_id,
+                "item_id": s.item_id,
+                "position_id": s.position_id,
+                "execute_time": s.execute_time.strftime("%H:%M:%S"),
+                "cycle": s.cycle,
+                "on_weekends": s.on_weekends,
+            }
+            for s in schedules
+        ]
+    }
 
 
 def schedule_edit(data):
-    msg = "schedule_edit"
     is_success = False
     result = None
 
@@ -184,6 +200,28 @@ def schedule_edit(data):
         is_success = True
 
     return {
-        "msg": msg,
         "success": is_success,
+    }
+
+
+def history_info():
+    histories: List[History] = gui_mapper.history_info()
+
+    return {
+        "histories": [
+            {
+                "history_id": h.history_id,
+                "user_id": h.user_id,
+                "item_id": h.item_id,
+                "robot_1": h.robot_1,
+                "robot_2": h.robot_2,
+                "position_id": h.position_id,
+                "schedule_id": h.schedule_id,
+                "detection_type": h.detection_type,
+                "time_start": h.time_start,
+                "time_end": h.time_end,
+                "is_successful": h.is_successful,
+            }
+        ]
+        for h in histories
     }
