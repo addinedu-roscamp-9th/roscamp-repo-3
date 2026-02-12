@@ -101,13 +101,21 @@ def fetch_cmd(data):
     item_id = data.get("item_id")
     position_id = data.get("position_id")
 
-    # TODO: first send pinky to DZ
-    position = get_pos_grid(position_id)
-    result = pinky_service.send_command_to_pinky(position)
-    if result is False:
-        return
+    # Step 1: Get DZ (drop zone) position from database
+    dz_position = get_pos_grid(position_id)
+    if dz_position is None:
+        print("Position not found")
+        return {"success": False, "error": "Position not found"}
 
-    # Create pick sequence for fetching item
+    # Step 2: Send Pinky to DZ (non-blocking - just send the command)
+    print("Step 1: Sending Pinky to DZ position")
+    result = pinky_service.send_command_to_pinky(dz_position)
+    if result is False:
+        print("Failed to send Pinky to DZ")
+        return {"success": False, "error": "Failed to send Pinky to DZ"}
+
+    # Step 3: Jetcobot picks up item (while Pinky travels to DZ)
+    print("Step 2: Jetcobot picking up item (while Pinky travels to DZ)")
     pick_sequence = [
         create_posture(DEFAULT_POS, gap=100),
         create_posture(READY_POS, gap=100),
@@ -116,16 +124,50 @@ def fetch_cmd(data):
         create_posture(READY_POS, gap=50),
     ]
 
-    # Send postures to jetcobot
     is_success: bool = send_postures_to_jetcobot(pick_sequence)
 
     if is_success is False:
         print("Failed to pick up the item")
-        return {"success": False}
+        return {"success": False, "error": "Jetcobot pick failed"}
 
-    # TODO: send position to pinky
-    pinky_res = pinky_service.send_command_to_pinky(position)
-    print(pinky_res)
+    # Step 4: Wait for Pinky to arrive at DZ (blocking)
+    print("Step 3: Waiting for Pinky to arrive at DZ...")
+    if not pinky_service.wait_for_pinky_arrival(timeout=60):
+        print("Pinky failed to reach DZ")
+        return {"success": False, "error": "Pinky failed to reach DZ"}
+
+    # Step 5: Jetcobot drops item onto Pinky at DZ
+    print("Step 4: Jetcobot dropping item onto Pinky")
+    drop_sequence = [
+        create_posture(PLACE_POS, gap=100),
+        create_posture(PLACE_POS, gap=50),
+        create_posture(READY_POS, gap=100),
+        create_posture(DEFAULT_POS, gap=100),
+    ]
+
+    is_success = send_postures_to_jetcobot(drop_sequence)
+
+    if is_success is False:
+        print("Failed to drop the item")
+        return {"success": False, "error": "Jetcobot drop failed"}
+
+    # Step 6: Get final target position
+    position = get_pos_grid(position_id)
+    if position is None:
+        print(f"Target position '{position_id}' not found in database")
+        return {"success": False, "error": "Position not found"}
+
+    # Step 7: Pinky goes to final target position
+    print(f"Step 5: Sending Pinky to final position {position_id}")
+    result = pinky_service.send_command_to_pinky(position)
+    if result is False:
+        print("Failed to send Pinky to target position")
+        return {"success": False, "error": "Failed to send command to Pinky"}
+
+    print("Step 6: Waiting for Pinky to reach final destination...")
+    if not pinky_service.wait_for_pinky_arrival(timeout=60):
+        print("Pinky did not reach final destination")
+        return {"success": False, "error": "Pinky navigation failed or timeout"}
 
     return {"success": True}
 
