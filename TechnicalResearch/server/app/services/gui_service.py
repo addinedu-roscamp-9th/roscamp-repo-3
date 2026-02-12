@@ -91,21 +91,21 @@ def send_postures_to_jetcobot(postures) -> bool:
 
 
 def get_pos_grid(pos_id):
-    result = gui_mapper.select_position_by_id(pos_id)
-    if result is None:
+    position = gui_mapper.select_position_by_id(pos_id)
+    if position is None:
         return None
-    x, y, w = result
-    return x, y, w
+    return position
 
 
 def fetch_cmd(data):
-    msg = "fetch_cmd"
-    item = data["item"]
-    position = data["position"]
+    item_id = data.get("item_id")
+    position_id = data.get("position_id")
 
-    print("gui_service.py")
-    print(f"item: {item}")
-    print(f"position: {position}")
+    # TODO: first send pinky to DZ
+    position = get_pos_grid(position_id)
+    result = pinky_service.send_command_to_pinky(position)
+    if result is False:
+        return
 
     # Create pick sequence for fetching item
     pick_sequence = [
@@ -123,13 +123,8 @@ def fetch_cmd(data):
         print("Failed to pick up the item")
         return {"success": False}
 
-    # TODO: first send pinky to DZ
-    if is_success is False:
-        print("Failed to drop the item")
-        return {"success": False}
-
     # TODO: send position to pinky
-    pinky_res = pinky_service.send_position(position)
+    pinky_res = pinky_service.send_command_to_pinky(position)
     print(pinky_res)
 
     return {"success": True}
