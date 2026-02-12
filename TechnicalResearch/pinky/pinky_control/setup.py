@@ -21,6 +21,7 @@ setup(
         "console_scripts": [
             "pinky_status_sender = pinky_control.pinky_status_sender:main",
             "pinky_cmd_listener = pinky_control.pinky_cmd_listener:main",
+            "goto_pose = pinky_control.goto_pose:main",
         ],
     },
 )

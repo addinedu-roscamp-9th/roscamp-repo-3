@@ -27,7 +27,7 @@ class PinkyCmdListener(Node):
         self.pub = self.create_publisher(Twist, "/cmd_vel", 10)
 
         # 0.5초마다 서버에서 명령 가져오기
-        self.timer = self.create_timer(0.5, self.fetch_and_execute_cmd)
+        self.timer = self.create_timer(2.0, self.fetch_and_execute_cmd)
 
         # 기본 이동 속도 (m/s)
         self.default_speed = 0.2
@@ -74,7 +74,8 @@ class PinkyCmdListener(Node):
         start_time = time.time()
         while time.time() - start_time < duration:
             self.pub.publish(twist)
-            rclpy.spin_once(self, timeout_sec=2.0)
+            rclpy.spin_once(self, timeout_sec=0.1)
+            time.sleep(0.3)
 
         # 이동 종료 후 완전히 멈춤
         self.pub.publish(Twist())
