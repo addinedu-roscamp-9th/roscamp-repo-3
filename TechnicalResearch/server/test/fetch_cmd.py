@@ -5,7 +5,7 @@ import sys
 import websockets
 
 
-async def test_fetch_cmd(item_id="i2602120001", position_id="p2602120001"):
+async def test_fetch_cmd(item_id, position_id):
     uri = "ws://localhost:8000/gui"
 
     try:
@@ -47,9 +47,5 @@ async def test_fetch_cmd(item_id="i2602120001", position_id="p2602120001"):
 
 
 if __name__ == "__main__":
-    # Allow command line arguments for item and position
-    item = sys.argv[1] if len(sys.argv) > 1 else "i2602120001"
-    position = sys.argv[2] if len(sys.argv) > 2 else "p2602120001"
-
-    success = asyncio.run(test_fetch_cmd(item, position))
+    success = asyncio.run(test_fetch_cmd("2602070001", "p2602070001"))
     sys.exit(0 if success else 1)
