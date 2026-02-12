@@ -8,10 +8,12 @@ class Controller:
         self.postures = postures
         self.move = move
 
-    def execute(self) -> None:
+    def execute(self) -> bool:
         for posture in self.postures:
             try:
                 self.move.execute(posture)
             except Exception as e:
                 print(f"Error executing posture: {e}")
                 raise
+
+        return True

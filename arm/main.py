@@ -29,14 +29,12 @@ app = FastAPI()
 async def handle_pose(req: List[Posture]):
     try:
         if move is None:
-            return {"success": False, "error": "Arm not initialized"}
+            return {"success": False}
 
         print(f"Received {len(req)} postures from server")
         controller = Controller(req, move)
-        controller.execute()
-
-        print("Successfully executed all postures")
-        return {"success": True, "message": "All postures executed successfully"}
+        result: bool = controller.execute()
+        return {"success": result}
 
     except Exception as e:
         print(f"Error executing postures: {e}")

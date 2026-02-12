@@ -73,7 +73,7 @@ def create_posture(angles, gap=50):
     }
 
 
-def send_postures_to_jetcobot(postures):
+def send_postures_to_jetcobot(postures) -> bool:
     """Send list of postures to jetcobot arm service"""
     jetcobot_url = f"http://{JETCOBOT_HOST}:{JETCOBOT_PORT}/pose"
 
@@ -82,14 +82,16 @@ def send_postures_to_jetcobot(postures):
             response = client.post(jetcobot_url, json=postures)
             response.raise_for_status()
             result = response.json()
+            is_success: bool = result["success"]
             print(f"Jetcobot response: {result}")
-            return result
+            return is_success
     except httpx.HTTPError as e:
         print(f"Error sending to jetcobot: {e}")
-        return {"success": False, "error": str(e)}
+        return False
 
 
 def fetch_cmd(data):
+    msg = "fetch_cmd"
     item = data["item"]
     position = data["position"]
 
@@ -99,19 +101,18 @@ def fetch_cmd(data):
 
     # Create pick sequence for fetching item
     pick_sequence = [
-        create_posture(DEFAULT_POS, gap=100),  # Start at default, gripper open
-        create_posture(READY_POS, gap=100),    # Move to ready position
-        create_posture(PICK_POS, gap=100),     # Move to pick position, gripper open
-        create_posture(PICK_POS, gap=50),      # Close gripper to grab item
-        create_posture(READY_POS, gap=50),     # Lift item to ready position
+        create_posture(DEFAULT_POS, gap=100),
+        create_posture(READY_POS, gap=100),
+        create_posture(PICK_POS, gap=100),
+        create_posture(PICK_POS, gap=50),
+        create_posture(READY_POS, gap=50),
     ]
 
     # Send postures to jetcobot
-    jetcobot_result = send_postures_to_jetcobot(pick_sequence)
+    is_success: bool = send_postures_to_jetcobot(pick_sequence)
 
-    if not jetcobot_result.get("success"):
-        error_msg = jetcobot_result.get("error", "Unknown error")
-        return {"status": "error", "message": f"Failed to execute pick sequence: {error_msg}"}
+    if is_success is False:
+        return {"msg": msg, "data": {"success": is_success}}
 
     # TODO: first send pinky to DZ
 
@@ -119,18 +120,7 @@ def fetch_cmd(data):
     pinky_res = pinky_service.send_position(position)
     print(pinky_res)
 
-    return {
-        "status": "success",
-        "message": "Pick sequence completed and position sent to pinky",
-        "jetcobot_response": jetcobot_result,
-    }
-
-
-# position_id = Column(String(11), primary_key=True)
-# position_name = Column(String(30), nullable=False)
-# x = Column(Float, nullable=False)
-# y = Column(Float, nullable=False)
-# theta = Column(Float, nullable=False)
+    return {"msg": msg, "data": {"success": True}}
 
 
 def take_info():
@@ -174,51 +164,26 @@ def schedule_info():
     ]
 
 
-# {
-#     msg_type: schedule_edit,
-#     data: {
-#         action: edit,
-#         schedule_id: s2602100001,
-#         cmd_id: c2602100001,
-#         item_id: i2602100001,
-#         position_id: p2602100001,
-#         ececute_time: 15:40:00,
-#         cycle: 1,
-#         on_weekends: false,
-#     }
-# }
-
-
 def schedule_edit(data):
+    msg = "schedule_edit"
+    is_success = False
+    result = None
+
     action = data["action"]
-    success = "false"
     match action:
         case "add":
             result = schedule_mapper.insert_schedule(data)
-            if result is not None:
-                success = "true"
-            return {
-                "msg_type": "add",
-                "success": success,
-            }
-
         case "edit":
             result = schedule_mapper.update_schedule(data)
-            if result is not None:
-                success = "true"
-            return {
-                "msg_type": "edit",
-                "success": success,
-            }
-
         case "delete":
             result = schedule_mapper.delete_schedule(data)
-            if result is not None:
-                success = "true"
-            return {
-                "msg_type": "delete",
-                "success": success,
-            }
-
         case _:
-            return None
+            pass
+
+    if result is not None:
+        is_success = True
+
+    return {
+        "msg": msg,
+        "success": is_success,
+    }
