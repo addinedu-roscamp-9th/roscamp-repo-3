@@ -83,7 +83,7 @@ def create_posture(angles, gap=50):
     }
 
 
-def send_postures_to_jetcobot(postures) -> bool:
+def cmd_arm(postures) -> bool:
     """Send list of postures to jetcobot arm service"""
     jetcobot_url = f"http://{JETCOBOT_HOST}:{JETCOBOT_PORT}/pose"
 
@@ -119,7 +119,7 @@ def fetch_cmd(data):
 
     # Step 2: Send Pinky to DZ (non-blocking - just send the command)
     print("Step 1: Sending Pinky to DZ position")
-    result = pinky_service.send_command_to_pinky(dz_position)
+    result = pinky_service.cmd_pinky(dz_position)
     if result is False:
         print("Failed to send Pinky to DZ")
         return {"success": False, "error": "Failed to send Pinky to DZ"}
@@ -133,7 +133,7 @@ def fetch_cmd(data):
         create_posture(PINKY_SIDE, gap=0),
     ]
 
-    is_success: bool = send_postures_to_jetcobot(pick_sequence)
+    is_success: bool = cmd_arm(pick_sequence)
 
     if is_success is False:
         print("Failed to pick up the item")
@@ -141,7 +141,7 @@ def fetch_cmd(data):
 
     # Step 4: Wait for Pinky to arrive at DZ (blocking)
     print("Step 3: Waiting for Pinky to arrive at DZ...")
-    if not pinky_service.wait_for_pinky_arrival(timeout=60):
+    if not pinky_service.wait_pinky(timeout=60):
         print("Pinky failed to reach DZ")
         return {"success": False, "error": "Pinky failed to reach DZ"}
 
@@ -153,7 +153,7 @@ def fetch_cmd(data):
         create_posture(HOME, gap=100),
     ]
 
-    is_success = send_postures_to_jetcobot(drop_sequence)
+    is_success = cmd_arm(drop_sequence)
 
     if is_success is False:
         print("Failed to drop the item")
@@ -167,13 +167,13 @@ def fetch_cmd(data):
 
     # Step 7: Pinky goes to final target position
     print(f"Step 5: Sending Pinky to final position {position_id}")
-    result = pinky_service.send_command_to_pinky(position)
+    result = pinky_service.cmd_pinky(position)
     if result is False:
         print("Failed to send Pinky to target position")
         return {"success": False, "error": "Failed to send command to Pinky"}
 
     print("Step 6: Waiting for Pinky to reach final destination...")
-    if not pinky_service.wait_for_pinky_arrival(timeout=60):
+    if not pinky_service.wait_pinky(timeout=60):
         print("Pinky did not reach final destination")
         return {"success": False, "error": "Pinky navigation failed or timeout"}
 
