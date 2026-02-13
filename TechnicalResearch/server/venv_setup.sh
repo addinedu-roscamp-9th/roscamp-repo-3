@@ -8,15 +8,16 @@ set -euo pipefail
 
 pip_packages=(
   "cryptography"
+  "dotenv"
   "fastapi"
   "httpx"
   "jinja2"
   "multipart"
-  "dotenv"
   "numpy"
   "opencv-python"
   "pymysql"
   "pyyaml"
+  "rclpy"
   "setuptools"
   "sqlalchemy"
   "typeguard"
