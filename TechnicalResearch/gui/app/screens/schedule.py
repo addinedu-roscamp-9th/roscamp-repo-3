@@ -50,10 +50,11 @@ class ScheduleScreen(QWidget):
     def _make_header(self) -> QHBoxLayout:
         header = QHBoxLayout()
 
-        btn_back = QPushButton("⬅️ 홈으로")
-        btn_back.setStyleSheet(BACK_BUTTON_STYLE)
-        btn_back.clicked.connect(self._on_back)
-        header.addWidget(btn_back)
+        btn = QPushButton("뒤로가기")
+        btn.setFixedSize(100, 35)
+        btn.setStyleSheet(BACK_BUTTON_STYLE)
+        btn.clicked.connect(self._on_back)
+        header.addWidget(btn)
         header.addStretch()
 
         title = QLabel("작업 예약")
@@ -86,9 +87,7 @@ class ScheduleScreen(QWidget):
     # ------------------------------------------------------------------
 
     def _add_preset(self) -> None:
-        name, ok = QInputDialog.getText(
-            self, "스케줄 이름", "스케줄 이름을 입력하세요:"
-        )
+        name, ok = QInputDialog.getText(self, " 프리셋 ", "프리셋 이름:")
         if ok and name:
             self._schedules[name] = ["안방", "거실", "화장실"]
             self._refresh_list()
@@ -96,26 +95,26 @@ class ScheduleScreen(QWidget):
     def _run_preset(self) -> None:
         name = self._selected_name()
         if name is None:
-            QMessageBox.warning(self, "경고", "작업을 선택하세요!")
+            QMessageBox.warning(self, "경고", "작업을 선택하세요")
             return
 
         try:
             resp = client.execute_schedule(name, self._schedules[name])
             if resp.status_code == 200:
-                QMessageBox.information(self, "실행", f"'{name}' 작업 시작!")
+                QMessageBox.information(self, "실행", f"'{name}' 작업 시작")
         except Exception as exc:
             QMessageBox.critical(self, "오류", f"서버 연결 실패: {exc}")
 
     def _delete_preset(self) -> None:
         name = self._selected_name()
         if name is None:
-            QMessageBox.warning(self, "경고", "작업을 선택하세요!")
+            QMessageBox.warning(self, "경고", "작업을 선택하세요")
             return
 
         ret = QMessageBox.question(
             self,
             "삭제 확인",
-            f"'{name}' 작업을 삭제하시겠습니까?",
+            f"'{name}' 프리셋을 삭제하시겠습니까?",
             QMessageBox.Yes | QMessageBox.No,
         )
         if ret == QMessageBox.Yes:
