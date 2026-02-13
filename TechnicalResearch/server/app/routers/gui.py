@@ -8,21 +8,17 @@ router = APIRouter()
 
 # ws://192.168.0.56:8000/gui
 @router.websocket("")
-async def jetcobot_connection_test(websocket: WebSocket):
+async def gui_ws(websocket: WebSocket):
     await websocket.accept()
     try:
         while True:
             msg = await websocket.receive_json()
-
             result = gui_controller(msg)
-
             await websocket.send_json(result)
     except WebSocketDisconnect:
-        print("Client disconnected normally")
+        print("Client disconnected")
     except ValidationError as e:
-        print(f"Invalid data format from client: {e}")
-    except ValueError as e:
-        print(f"Service error: {e}")
+        print(e)
 
 
 def gui_controller(msg):
