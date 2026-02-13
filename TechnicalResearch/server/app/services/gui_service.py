@@ -54,10 +54,20 @@ def fetch_info():
     }
 
 
-DEFAULT_POS = [5.36, 121.99, -140.09, -24.69, 6.41, -126.82]
-READY_POS = [50.2, 116.0, 311.6, -160.96, -5.67, 48.23]
-PICK_POS = [33.2, 241.5, 114.7, -168.73, 7.76, 45.65]
-PLACE_POS = [265.2, 45.4, 42.8, -174.55, 14.04, -35.09]
+HOME = [1.58, 49.92, -147.39, 91.14, 4.65, -44.64]
+SHELVE_SIDE = [92.02, 6.85, -18.28, -42.09, 9.84, -45.52]
+
+PICK1 = [111.79, -60.11, -18.72, -1.93, 3.42, -25.48]
+PICK2 = [93.95, -62.13, -20.03, -1.93, 4.57, -41.39]
+PICK3 = [76.99, -67.32, -20.47, 7.47, 3.33, -61.08]
+
+PINKY_SIDE = [0.7, 7.11, -20.47, -46.14, 6.24, -48.42]
+DROP = [3.6, -66.97, -21.35, -3.25, 2.63, -34.54]
+
+TRASH_SIDE = [-89.2, -7.47, -21.7, -20.3, 3.86, -39.11]
+TRASH1 = [-58.71, -67.58, -22.14, 15.82, 1.58, -20.39]
+TRASH2 = [-88.24, -66.53, -22.5, 6.76, 6.94, -41.48]
+TRASH3 = [-111.0, -71.19, -22.85, 11.07, 8.96, -61.17]
 
 
 def create_posture(angles, gap=50):
@@ -117,11 +127,10 @@ def fetch_cmd(data):
     # Step 3: Jetcobot picks up item (while Pinky travels to DZ)
     print("Step 2: Jetcobot picking up item (while Pinky travels to DZ)")
     pick_sequence = [
-        create_posture(DEFAULT_POS, gap=100),
-        create_posture(READY_POS, gap=100),
-        create_posture(PICK_POS, gap=100),
-        create_posture(PICK_POS, gap=50),
-        create_posture(READY_POS, gap=50),
+        create_posture(SHELVE_SIDE, gap=100),
+        create_posture(PICK1, gap=0),
+        create_posture(SHELVE_SIDE, gap=0),
+        create_posture(PINKY_SIDE, gap=0),
     ]
 
     is_success: bool = send_postures_to_jetcobot(pick_sequence)
@@ -139,10 +148,9 @@ def fetch_cmd(data):
     # Step 5: Jetcobot drops item onto Pinky at DZ
     print("Step 4: Jetcobot dropping item onto Pinky")
     drop_sequence = [
-        create_posture(PLACE_POS, gap=100),
-        create_posture(PLACE_POS, gap=50),
-        create_posture(READY_POS, gap=100),
-        create_posture(DEFAULT_POS, gap=100),
+        create_posture(DROP, gap=100),
+        create_posture(PINKY_SIDE, gap=100),
+        create_posture(HOME, gap=100),
     ]
 
     is_success = send_postures_to_jetcobot(drop_sequence)
