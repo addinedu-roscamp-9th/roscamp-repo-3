@@ -22,10 +22,8 @@ class PinkyNode(Node):
         )
 
     def target_callback(self, msg):
-        """receives target position (x, y) and direction (theta) and moves pinky"""
-        self.get_logger().info(
-            f"Received target: x={msg.x}, y={msg.y}, theta={msg.theta}"
-        )
+        """receives target position (x, y) and direction (w) and moves pinky"""
+        self.get_logger().info(f"Received target: x={msg.x}, y={msg.y}, w={msg.w}")
 
         # Stop previous movement timer if exists
         if self.timer is not None:
@@ -41,11 +39,11 @@ class PinkyNode(Node):
         target_angle = math.atan2(msg.y, msg.x)
 
         # Calculate angle difference (how much we need to rotate)
-        angle_diff = msg.theta - target_angle
+        angle_diff = msg.w - target_angle
 
         self.get_logger().info(
             f"Distance: {distance:.2f}m, Target angle: {target_angle:.2f}rad, "
-            f"Final heading: {msg.theta:.2f}rad"
+            f"Final heading: {msg.w:.2f}rad"
         )
 
         # Set reasonable velocities (NOT the raw position values!)

@@ -152,14 +152,14 @@ def wait_pinky(timeout: int) -> bool:
         return False
 
 
-def publish_pinky_target(x: float, y: float, theta: float) -> bool:
+def publish_pinky_target(x: float, y: float, w: float) -> bool:
     """
     Publish target to /pinky/target topic
 
     Args:
         x: X coordinate
         y: Y coordinate
-        theta: Yaw angle in radians
+        w: Yaw angle in radians
 
     Returns:
         bool: True if message was published successfully, False otherwise
@@ -170,12 +170,10 @@ def publish_pinky_target(x: float, y: float, theta: float) -> bool:
         msg = PinkyTarget()
         msg.x = x
         msg.y = y
-        msg.theta = theta
+        msg.w = w
 
         node.target_publisher.publish(msg)
-        node.get_logger().info(
-            f"Published target: x={x:.2f}, y={y:.2f}, theta={theta:.2f}"
-        )
+        node.get_logger().info(f"Published target: x={x:.3f}, y={y:.3f}, w={w:.3f}")
 
         return True
     except Exception as e:

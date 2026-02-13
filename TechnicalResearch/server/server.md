@@ -2,6 +2,7 @@
 
 - [Project Structure](#project-structure)
 - [Environments](#environments)
+- [Trouble Shootig](#trouble-shooting)
 
 ---
 
@@ -10,6 +11,7 @@
 ```
 project/
 ├── app/
+│   ├── database/    ←  DB connection and mapper for query
 │   ├── routers/     ←  API endpoints (handles requests)
 │   ├── services/    ←  Business logic
 │   ├── models/      ←  Data structures (Pydantic)
@@ -42,3 +44,21 @@ Start the venv:
 ```sh
 source .venv/bin/activate
 ```
+
+---
+
+## Trouble Shooting
+
+Pinky should be in same network and have same `ROS_DOMAIN_ID`
+
+### No module named debugcrew_msgs
+
+1. Build the `roscamp-repo-3/porter` package
+
+2. Source `/opt/ros/jazzy/local_setup.bash` and `porter/install/local_setup.bash`
+
+### Navigation action server not available
+
+1. Bringup pinky
+
+2. Load map
