@@ -21,41 +21,41 @@ async def gui_ws(websocket: WebSocket):
         print(e)
 
 
-def gui_controller(msg):
-    data = msg.get("data")
-    msg = msg["msg"]
-    response = None
+def gui_controller(req):
+    msg = req.get("msg")
+    data = req.get("data")
+    res = None
 
     match msg:
         case "connect":
-            response = {"success": True}
+            res = {"success": True}
 
         case "login":
-            response = gui_service.login(data)
+            res = gui_service.login(data)
 
         case "fetch_req":
-            response = gui_service.fetch_info()
+            res = gui_service.fetch_info()
 
         case "fetch_cmd":
-            response = gui_service.fetch_cmd(data)
+            res = gui_service.fetch_cmd(data)
 
         case "take_req":
-            response = gui_service.take_info()
+            res = gui_service.take_info()
 
         case "take_cmd":
-            response = gui_service.take_cmd(data)
+            res = gui_service.take_cmd(data)
 
         case "schedule_req":
-            response = gui_service.schedule_info()
+            res = gui_service.schedule_info()
 
         case "schedule_edit":
-            response = gui_service.schedule_edit(data)
+            res = gui_service.schedule_edit(data)
 
         case "history_req":
-            response = gui_service.history_info()
+            res = gui_service.history_info()
 
         case _:
             msg = "error"
-            data = "unknown message"
+            res = "unknown message"
 
-    return {"msg": msg, "data": response}
+    return {"msg": msg, "data": res}
