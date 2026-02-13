@@ -3,7 +3,7 @@ import threading
 
 import rclpy
 from action_msgs.msg import GoalStatus
-from debugcrew_msgs.msg import PinkyTarget
+from debugcrew_msgs.msg import PorterTarget
 from nav2_msgs.action import NavigateToPose
 from rclpy.action import ActionClient
 from rclpy.node import Node
@@ -23,7 +23,7 @@ class PinkyNavigationClient(Node):
         self._result_future = None
 
         # Topic publisher for /pinky/target
-        self.target_publisher = self.create_publisher(PinkyTarget, "/pinky/target", 10)
+        self.target_publisher = self.create_publisher(PorterTarget, "/pinky/target", 10)
 
         self.get_logger().info("Pinky navigation client initialized")
 
@@ -167,12 +167,12 @@ def publish_pinky_target(x: float, y: float, w: float) -> bool:
     try:
         node = _get_ros_node()
 
-        msg = PinkyTarget()
-        msg.x = x
-        msg.y = y
-        msg.w = w
+        target = PorterTarget()
+        target.x = x
+        target.y = y
+        target.w = w
 
-        node.target_publisher.publish(msg)
+        node.target_publisher.publish(target)
         node.get_logger().info(f"Published target: x={x:.3f}, y={y:.3f}, w={w:.3f}")
 
         return True

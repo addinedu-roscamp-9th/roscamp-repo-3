@@ -14,13 +14,13 @@ Transport pinky
 ## Run
 
 ```sh
-ros2 run debugcrew pinky_node
+ros2 run debugcrew vel_sub
 ```
 
 Publis topic
 
 ```sh
-ros2 topic pub /pink/target debugcrew_msgs/msg/Pinkysy "{x: 5.0, y: 3.0, w: 0.0}"
+ros2 topic pub /porter_target debugcrew_msgs/msg/PorterTarget "{x: 5.0, y: 3.0, w: 0.0}"
 ```
 
 ---
@@ -34,13 +34,13 @@ ros2 topic pub /pink/target debugcrew_msgs/msg/Pinkysy "{x: 5.0, y: 3.0, w: 0.0}
 
 ## Nodes
 
-- pinky_node
+- vel_sub
 
 ---
 
 ## Msgs
 
-- PinkyTarget.msg
+- PorterTarget.msg
 
 ```
 float32 x

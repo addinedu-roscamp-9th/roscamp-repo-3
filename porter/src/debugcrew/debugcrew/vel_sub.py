@@ -1,16 +1,16 @@
 import math
 
 import rclpy as rp
-from debugcrew_msgs.msg import PinkyTarget
+from debugcrew_msgs.msg import PorterTarget
 from geometry_msgs.msg import Twist
 from rclpy.node import Node
 
 
-class PinkyNode(Node):
+class VelSub(Node):
     def __init__(self):
-        super().__init__("pinky_node")
+        super().__init__("vel_sub")
         self.subscription = self.create_subscription(
-            PinkyTarget, "/pinky/target", self.target_callback, 10
+            PorterTarget, "/porter_target", self.target_callback, 10
         )
         # Changed to standard /cmd_vel topic
         self.publisher = self.create_publisher(Twist, "/cmd_vel", 10)
@@ -18,7 +18,7 @@ class PinkyNode(Node):
         self.current_cmd = Twist()
         self.publishing = False
         self.get_logger().info(
-            "Pinky node started, listening for targets on /pinky/target"
+            "Velocity subscriber started, listening for targets on /porter_target"
         )
 
     def target_callback(self, msg):
@@ -94,12 +94,12 @@ class PinkyNode(Node):
 def main(args=None) -> None:
     rp.init(args=args)
 
-    pinky_node = PinkyNode()
+    vel_sub = VelSub()
 
     try:
-        rp.spin(pinky_node)
+        rp.spin(vel_sub)
     finally:
-        pinky_node.destroy_node()
+        vel_sub.destroy_node()
         rp.shutdown()
 
 
