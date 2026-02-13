@@ -3,6 +3,7 @@ import threading
 
 import rclpy
 from action_msgs.msg import GoalStatus
+from debugcrew_msgs.msg import PinkyTarget
 from nav2_msgs.action import NavigateToPose
 from rclpy.action import ActionClient
 from rclpy.node import Node
@@ -20,6 +21,10 @@ class PinkyNavigationClient(Node):
         self._action_client = ActionClient(self, NavigateToPose, "navigate_to_pose")
         self._goal_handle = None
         self._result_future = None
+
+        # Topic publisher for /pinky/target
+        self.target_publisher = self.create_publisher(PinkyTarget, "/pinky/target", 10)
+
         self.get_logger().info("Pinky navigation client initialized")
 
 
@@ -144,4 +149,35 @@ def wait_pinky(timeout: int) -> bool:
 
     except Exception as e:
         print(f"Error waiting for Pinky: {e}")
+        return False
+
+
+def publish_pinky_target(x: float, y: float, theta: float) -> bool:
+    """
+    Publish target to /pinky/target topic
+
+    Args:
+        x: X coordinate
+        y: Y coordinate
+        theta: Yaw angle in radians
+
+    Returns:
+        bool: True if message was published successfully, False otherwise
+    """
+    try:
+        node = _get_ros_node()
+
+        msg = PinkyTarget()
+        msg.x = x
+        msg.y = y
+        msg.theta = theta
+
+        node.target_publisher.publish(msg)
+        node.get_logger().info(
+            f"Published target: x={x:.2f}, y={y:.2f}, theta={theta:.2f}"
+        )
+
+        return True
+    except Exception as e:
+        print(f"Error publishing target: {e}")
         return False
