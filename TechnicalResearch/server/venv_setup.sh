@@ -25,10 +25,6 @@ pip_packages=(
   "websockets"
 )
 
-apt_packages=(
-  "ros-jazzy-nav2-msgs"
-)
-
 # create venv if not already created
 if [ ! -d ./.venv ]; then
   python3 -m venv .venv
@@ -42,6 +38,3 @@ pip install -U pip
 
 # install required dependencies with pip
 pip install "${pip_packages[@]}"
-
-# install required dependencies with apt
-sudo apt install -y "${apt_packages[@]}"
