@@ -34,22 +34,22 @@ def fetch_info():
     return {
         "items": [
             {
-                "item_id": item.item_id,
-                "item_name": item.item_name,
-                "amount": item.amount,
-                "frequency": item.frequency,
+                "item_id": i.item_id,
+                "item_name": i.item_name,
+                "amount": i.amount,
+                "frequency": i.frequency,
             }
-            for item in items
+            for i in items
         ],
         "positions": [
             {
-                "position_id": pos.position_id,
-                "position_name": pos.position_name,
-                "x": pos.x,
-                "y": pos.y,
-                "theta": pos.theta,
+                "position_id": p.position_id,
+                "position_name": p.position_name,
+                "x": p.x,
+                "y": p.y,
+                "w": p.w,
             }
-            for pos in positions
+            for p in positions
         ],
     }
 
