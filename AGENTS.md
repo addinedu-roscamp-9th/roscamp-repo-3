@@ -17,7 +17,7 @@ This document provides build commands, code style guidelines, and development co
 
 ```bash
 # Navigate to workspace
-cd /home/lemon/dev/roscamp-repo-3/porter
+cd ~/dev/roscamp-repo-3/porter
 
 # Build all packages
 colcon build
@@ -39,14 +39,21 @@ source install/setup.bash
 
 ```bash
 # Setup virtual environment (first time)
-cd /home/lemon/dev/roscamp-repo-3/arm
+cd ~/dev/roscamp-repo-3/arm
+bash venv_setup.sh
+
+# Or for TechnicalResearch/server
+cd ~/dev/roscamp-repo-3/TechnicalResearch/server
 bash venv_setup.sh
 
 # Activate virtual environment
 source .venv/bin/activate
 
-# Run the service
+# Run the arm service
 python main.py
+
+# Run the gateway server (TechnicalResearch/server)
+python run.py
 ```
 
 ## Test Commands
@@ -55,7 +62,7 @@ python main.py
 
 ```bash
 # From porter/ directory
-cd /home/lemon/dev/roscamp-repo-3/porter
+cd ~/dev/roscamp-repo-3/porter
 
 # Run all tests
 colcon test
