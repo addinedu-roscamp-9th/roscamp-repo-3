@@ -131,3 +131,39 @@ def select_home_angle():
         )
     finally:
         db.close()
+
+def select_trash_angle():
+    db = SessionLocal()
+    try:
+        return (
+            db.query(
+                Angle.j1,
+                Angle.j2,
+                Angle.j3,
+                Angle.j4,
+                Angle.j5,
+                Angle.j6,
+            )
+            .filter(Angle.angle_name == "trash side")
+            .first()
+        )
+    finally:
+        db.close()
+
+def select_trash_general():
+    db = SessionLocal()
+    try:
+        return (
+            db.query(
+                Angle.j1,
+                Angle.j2,
+                Angle.j3,
+                Angle.j4,
+                Angle.j5,
+                Angle.j6,
+            )
+            .filter(Angle.angle_name == "trash general")
+            .first()
+        )
+    finally:
+        db.close()

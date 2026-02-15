@@ -48,6 +48,9 @@ def gui_controller(req):
         case "take_cmd":
             res = gui_service.take_cmd(data)
 
+        case "take_confirm":
+            res = gui_service.take_confirm()
+
         case "schedule_req":
             res = gui_service.schedule_info()
 

@@ -163,10 +163,51 @@ def take_info():
     }
 
 
-# TODO: implement take_cmd logic
 def take_cmd(data):
-    print(f"gui_service.take_cmd data: {data}")
-    return "Hello, from take_cmd()"
+    position_id = data.get("position_id")
+    target_pos = util_mapper.select_position_by_id(position_id)
+    pinky_to_target = pinky_service.cmd_pinky(target_pos)
+    if not pinky_to_target:
+        print("Pinky failed to reach target")
+        return {"success": False}
+    return {"success": True}
+
+
+def trash_sequence():
+    pinky_side = util_mapper.select_pinky_side_angle()
+    drop_angle = util_mapper.select_drop_angle()
+    trash_side = util_mapper.select_trash_angle()
+    trash_general = util_mapper.select_trash_general()
+
+    return [
+        create_angles(pinky_side, 100),
+        create_angles(drop_angle, 0),
+        create_angles(pinky_side, 0),
+        create_angles(trash_side, 0),
+        create_angles(trash_general, 100),
+    ]
+
+
+def take_confirm():
+    dz_pos = util_mapper.select_dz_pos()
+    pinky_to_dz = pinky_service.cmd_pinky(dz_pos)
+    if not pinky_to_dz:
+        print("Pinky failed to reach DZ")
+        return {"success": False}
+
+    # TODO: trash dynamically
+    trash_seq = trash_sequence()
+    arm_trash_res = cmd_arm(trash_seq)
+    if not arm_trash_res:
+        print("Arm failed to trash")
+        return {"success": False}
+
+    charger_pos = util_mapper.select_charger_pos()
+    pinky_to_charger = pinky_service.cmd_pinky(charger_pos)
+    if not pinky_to_charger:
+        print("pinky failed to go to charger")
+        return {"success": False}
+    return {"success": True}
 
 
 def schedule_info():
