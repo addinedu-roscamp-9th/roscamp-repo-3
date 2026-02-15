@@ -63,10 +63,11 @@ class Position(Base):
     w = Column(Float, nullable=False)
 
 
-class Posture(Base):
-    __tablename__ = "postures"
+class Angle(Base):
+    __tablename__ = "angles"
 
     pos_id = Column(String(11), primary_key=True)
+    item_id = Column(String(11), nullable=True)
     pos_name = Column(String(30), nullable=False)
     j1 = Column(Float, nullable=False)
     j2 = Column(Float, nullable=False)
@@ -74,7 +75,6 @@ class Posture(Base):
     j4 = Column(Float, nullable=False)
     j5 = Column(Float, nullable=False)
     j6 = Column(Float, nullable=False)
-    gap = Column(Integer, nullable=False)
 
 
 class Schedule(Base):

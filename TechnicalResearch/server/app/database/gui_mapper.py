@@ -1,5 +1,5 @@
 from app.database.connection import SessionLocal
-from app.models.tables import History, Item, Position, Posture, User
+from app.models.tables import History, Item, Position, Angle, User
 
 
 def login_user(user_id, user_pw):
@@ -58,18 +58,17 @@ def history_info():
         db.close()
 
 
-def select_posture_by_id(item_id):
+def select_angle_by_item_id(item_id):
     db = SessionLocal()
     try:
         return (
             db.query(
-                Posture.j1,
-                Posture.j2,
-                Posture.j3,
-                Posture.j4,
-                Posture.j5,
-                Posture.j6,
-                Posture.gap,
+                Angle.j1,
+                Angle.j2,
+                Angle.j3,
+                Angle.j4,
+                Angle.j5,
+                Angle.j6,
             )
             .filter(item_id)
             .first()
