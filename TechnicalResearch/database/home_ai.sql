@@ -22,7 +22,7 @@ create table users (
 
 insert into users
 values
-  ('asdf', 'asdf', 'foobar');
+    ('asdf', 'asdf', 'foobar');
 
 create table robot_types (
     robot_type varchar(30) primary key
@@ -58,9 +58,9 @@ create table items (
 
 insert into items
 values
-  ('i2602150001', 'choco', 10, 3),
-  ('i2602150002', 'juice', 10, 3),
-  ('i2602150003', 'pill', 10, 3);
+    ('i2602150001', 'choco', 10, 3),
+    ('i2602150002', 'juice', 10, 3),
+    ('i2602150003', 'pill', 10, 3);
 
 create table commands (
         cmd_id   varchar(11) primary key,
@@ -99,16 +99,16 @@ create table angles (
 -- "a" + 6 digit date + 4 digit int
 insert into angles
 values
-  ('a2602150001', null, 'home', 0, 0, 0, 0, 0, -47.33),
-  ('a2602150002', null, 'shelve_side', 47.8, 53.6, 323.9, -147.83, -3.83, 48.32),
-  ('a2602150003', 'i2602150001', 'pick_choco', -13.8, 273.3, 119.2, -170.71, 17.92, 48.2),
-  ('a2602150004', 'i2602150002', 'pick_juice', 71.4, 251.7, 136.4, -169.78, 10.65, 44.31),
-  ('a2602150005', 'i2602150003', 'pick_pill', -116.9, 244.0, 112.8, -175.41, 10.75, 46.85),
-  ('a2602150006', null, 'pinky_side', 115.4, -57.3, 301.2, -158.52, 4.56, -43.29),
-  ('a2602150007', null, 'drop', 260.8, -17.2, 43.9, -170.5, 22.21, -37.29),
-  ('a2602150008', null, 'trash_side', -49.4, -107.1, 336.3, -145.59, -12.03, -132.05),
-  ('a2602150009', null, 'trash_general', 38.3, -262.2, 267.2, -123.03, -22.08, -131.31),
-  ('a2602150010', null, 'trash_paper', -39.6, -272.2, 239.3, -138.81, -14.89, -143.59);
+    ('a2602150001', null, 'home', 0, 0, 0, 0, 0, -47.33),
+    ('a2602150002', null, 'shelve_side', 47.8, 53.6, 323.9, -147.83, -3.83, 48.32),
+    ('a2602150003', 'i2602150001', 'pick_choco', -13.8, 273.3, 119.2, -170.71, 17.92, 48.2),
+    ('a2602150004', 'i2602150002', 'pick_juice', 71.4, 251.7, 136.4, -169.78, 10.65, 44.31),
+    ('a2602150005', 'i2602150003', 'pick_pill', -116.9, 244.0, 112.8, -175.41, 10.75, 46.85),
+    ('a2602150006', null, 'pinky_side', 115.4, -57.3, 301.2, -158.52, 4.56, -43.29),
+    ('a2602150007', null, 'drop', 260.8, -17.2, 43.9, -170.5, 22.21, -37.29),
+    ('a2602150008', null, 'trash_side', -49.4, -107.1, 336.3, -145.59, -12.03, -132.05),
+    ('a2602150009', null, 'trash_general', 38.3, -262.2, 267.2, -123.03, -22.08, -131.31),
+    ('a2602150010', null, 'trash_paper', -39.6, -272.2, 239.3, -138.81, -14.89, -143.59);
 
 create table schedules (
         schedule_id  varchar(11) primary key,
@@ -123,7 +123,9 @@ create table schedules (
         foreign key (position_id) references positions (position_id)
     );
 
-insert into schedules values ('s2602070001', 'c2602070001', 'i2602150003', 'p2602070001', '15:40:00', 1, True);
+insert into schedules
+values
+    ('s2602070001', 'c2602070001', 'i2602150003', 'p2602070001', '15:40:00', 1, True);
 
 create table history (
         history_id     varchar(11) primary key,
