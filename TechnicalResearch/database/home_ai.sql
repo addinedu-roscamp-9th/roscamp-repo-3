@@ -63,9 +63,9 @@ values
     ('i2602150003', 'pill', 10, 3);
 
 create table angles (
-        pos_id   varchar(11) primary key,
+        angle_id   varchar(11) primary key,
         item_id  varchar(11),
-        pos_name varchar(30) not null,
+        angle_name varchar(30) not null,
         j1       float not null,
         j2       float not null,
         j3       float not null,

@@ -137,6 +137,14 @@ def fetch_cmd(data):
     return {"success": True}
 
 
+def fetch_confirm():
+    charger_pos = util_mapper.select_charger_pos()
+    pinky_to_charger = pinky_service.cmd_pinky(charger_pos)
+    if pinky_to_charger is False:
+        return {"success": False}
+    return {"success": True}
+
+
 def take_info():
     positions = gui_mapper.take_info()
     if positions is None:

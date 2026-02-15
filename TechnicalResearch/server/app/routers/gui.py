@@ -39,6 +39,9 @@ def gui_controller(req):
         case "fetch_cmd":
             res = gui_service.fetch_cmd(data)
 
+        case "fetch_confirm":
+            res = gui_service.fetch_confirm()
+
         case "take_req":
             res = gui_service.take_info()
 

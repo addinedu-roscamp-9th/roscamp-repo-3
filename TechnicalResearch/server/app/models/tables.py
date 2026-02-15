@@ -66,9 +66,9 @@ class Position(Base):
 class Angle(Base):
     __tablename__ = "angles"
 
-    pos_id = Column(String(11), primary_key=True)
+    angle_id = Column(String(11), primary_key=True)
     item_id = Column(String(11), nullable=True)
-    pos_name = Column(String(30), nullable=False)
+    angle_name = Column(String(30), nullable=False)
     j1 = Column(Float, nullable=False)
     j2 = Column(Float, nullable=False)
     j3 = Column(Float, nullable=False)

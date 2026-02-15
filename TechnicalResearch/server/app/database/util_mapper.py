@@ -10,6 +10,14 @@ def select_dz_pos():
         db.close()
 
 
+def select_charger_pos():
+    db = SessionLocal()
+    try:
+        return db.query(Position).filter(Position.pos_name == "charger").first()
+    finally:
+        db.close()
+
+
 def select_position_by_id(pos_id):
     db = SessionLocal()
     try:
@@ -21,7 +29,7 @@ def select_position_by_id(pos_id):
 def select_shelve_side_angle():
     db = SessionLocal()
     try:
-        return db.query(Angle).filter(Angle.pos_name == "shelve side").first()
+        return db.query(Angle).filter(Angle.angle_name == "shelve side").first()
     finally:
         db.close()
 
@@ -37,20 +45,22 @@ def select_angle_by_item_id(item_id):
 def select_pinky_side_angle():
     db = SessionLocal()
     try:
-        return db.query(Angle).filter(Angle.pos_name == "pinky_side").first()
+        return db.query(Angle).filter(Angle.angle_name == "pinky_side").first()
     finally:
         db.close()
+
 
 def select_drop_angle():
     db = SessionLocal()
     try:
-        return db.query(Angle).filter(Angle.pos_name == "drop").first()
+        return db.query(Angle).filter(Angle.angle_name == "drop").first()
     finally:
         db.close()
+
 
 def select_home_angle():
     db = SessionLocal()
     try:
-        return db.query(Angle).filter(Angle.pos_name == "home").first()
+        return db.query(Angle).filter(Angle.angle_name == "home").first()
     finally:
         db.close()
