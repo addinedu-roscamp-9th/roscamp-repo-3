@@ -1,11 +1,10 @@
 import os
-import threading
-from typing import List, Tuple
+from typing import List
 
 import httpx
 from dotenv import load_dotenv
 
-from app.database import gui_mapper, schedule_mapper
+from app.database import gui_mapper, schedule_mapper, util_mapper
 from app.models.tables import History
 from app.services import pinky_service
 
@@ -55,24 +54,47 @@ def fetch_info():
     }
 
 
-def create_posture(angles, gap=50):
+def create_angles(angle, gap):
     return {
-        "j1": angles[0],
-        "j2": angles[1],
-        "j3": angles[2],
-        "j4": angles[3],
-        "j5": angles[4],
-        "j6": angles[5],
+        "j1": angle.j1,
+        "j2": angle.j2,
+        "j3": angle.j3,
+        "j4": angle.j4,
+        "j5": angle.j5,
+        "j6": angle.j6,
         "gap": gap,
     }
 
 
-def cmd_arm(postures) -> bool:
+def drop_sequence():
+    drop_angle = util_mapper.select_drop_angle()
+    home_angle = util_mapper.select_home_angle()
+
+    return [
+        create_angles(drop_angle, gap=100),
+        create_angles(home_angle, gap=100),
+    ]
+
+
+def pick_sequence(item_id):
+    shelve_side = util_mapper.select_shelve_side_angle()
+    pinky_side = util_mapper.select_pinky_side_angle()
+    pick_angle = util_mapper.select_angle_by_item_id(item_id)
+
+    return [
+        create_angles(shelve_side, gap=100),
+        create_angles(pick_angle, gap=0),
+        create_angles(shelve_side, gap=0),
+        create_angles(pinky_side, gap=0),
+    ]
+
+
+def cmd_arm(sequence) -> bool:
     jetcobot_url = f"http://{JETCOBOT_HOST}:{JETCOBOT_PORT}/pose"
 
     try:
         with httpx.Client(timeout=60.0) as client:
-            response = client.post(jetcobot_url, json=postures)
+            response = client.post(jetcobot_url, json=sequence)
             response.raise_for_status()
             result = response.json()
             is_success: bool = result["success"]
@@ -83,95 +105,34 @@ def cmd_arm(postures) -> bool:
         return False
 
 
-def get_pos_grid(pos_id):
-    position = gui_mapper.select_position_by_id(pos_id)
-    if position is None:
-        return None
-    return position
-
-
-def execute_parallel(pinky_position, arm_sequence) -> Tuple[bool, bool]:
-    pinky_result = [False]
-    arm_result = [False]
-
-    def run_pinky():
-        if pinky_service.cmd_pinky(pinky_position):
-            pinky_result[0] = pinky_service.wait_pinky(timeout=60)
-        else:
-            pinky_result[0] = False
-
-    def run_arm():
-        arm_result[0] = cmd_arm(arm_sequence)
-
-    pinky_thread = threading.Thread(target=run_pinky, name="PorterThread")
-    arm_thread = threading.Thread(target=run_arm, name="ArmThread")
-
-    pinky_thread.start()
-    arm_thread.start()
-
-    pinky_thread.join()
-    arm_thread.join()
-
-    return pinky_result[0], arm_result[0]
-
-
 def fetch_cmd(data):
     item_id = data.get("item_id")
     position_id = data.get("position_id")
-    dz_pos_id = "p2602100001"
 
-    target_pos = get_pos_grid(position_id)
-    dz_pos = get_pos_grid(dz_pos_id)
+    dz_pos = util_mapper.select_dz_pos()
+    pinky_to_dz = pinky_service.cmd_pinky(dz_pos)
+    if pinky_to_dz is False:
+        print("Pinky failed to reach DZ")
 
-    if position_id is None:
-        print("Target position not found")
-        return {"success": False, "error": "Target position not found"}
+    pick_seq = pick_sequence(item_id)
+    arm_pickup_res = cmd_arm(pick_seq)
+    if arm_pickup_res is False:
+        print(f"Arm failed to pick up {item_id}")
 
-    pick_sequence = [
-        create_posture(SHELVE_SIDE, gap=100),
-        create_posture(PICK1, gap=0),
-        create_posture(SHELVE_SIDE, gap=0),
-        create_posture(PINKY_SIDE, gap=0),
-    ]
+    if pinky_to_dz and arm_pickup_res is False:
+        return "foobar"
 
-    pinky_success, arm_success = execute_parallel(dz_pos, pick_sequence)
+    drop_seq = drop_sequence()
+    arm_drop_res = cmd_arm(drop_seq)
+    if arm_drop_res is False:
+        print("Arm failed to drop item to pinky")
 
-    if not pinky_success:
-        print("Porter: failed to reach DZ")
-        return {"success": False, "error": "Porter: failed to reach DZ"}
-    if not arm_success:
-        print("Arm: failed to pick up the item")
-        return {"success": False, "error": "Arm: failed to pick up the item"}
-
-    print("Commaned porter and arm")
-
-    drop_sequence = [
-        create_posture(DROP, gap=100),
-        create_posture(PINKY_SIDE, gap=100),
-        create_posture(HOME, gap=100),
-    ]
-
-    is_success = cmd_arm(drop_sequence)
-
-    if is_success is False:
-        print("Arm: failed to drop")
-        return {"success": False, "error": "Arm: failed to drop"}
-
-    print("Arm: drop successful")
-
-    # PHASE 3: Pinky goes to final destination
-    print(f"=== PHASE 3: Pinky to Final Position ({position_id}) ===")
-
-    result = pinky_service.cmd_pinky(target_pos)
-    if result is False:
-        print("final position not found")
-        return {"success": False, "error": "final position not found"}
-
-    if not pinky_service.wait_pinky(timeout=60):
-        print("pinky failed to reach target")
-        return {"success": False, "error": "pinky failed to reach target"}
-
-    print("pinky reach target")
+    target_pos = util_mapper.select_position_by_id(position_id)
+    if target_pos is None:
+        print(f"{target_pos} not found")
+    pinky_to_target_res = pinky_service.cmd_pinky(target_pos)
+    if pinky_to_target_res is False:
+        print("Pinky failed to reach target position")
 
     return {"success": True}
 

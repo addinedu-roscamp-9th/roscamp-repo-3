@@ -70,7 +70,7 @@ def select_angle_by_item_id(item_id):
                 Angle.j5,
                 Angle.j6,
             )
-            .filter(item_id)
+            .filter(Angle.item_id == item_id)
             .first()
         )
     finally:
