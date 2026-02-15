@@ -106,9 +106,9 @@ create table positions (
     );
 
 insert into positions values ('p2602150001', 'charger', 0.0, 0.0, 0.0);
-insert into positions values ('p2602070001', 'drop zone', 0.2269, 0.2037, 0.7076);
-insert into positions values ('p2602100002', 'living room', 4.0, 5.0, 6.0);
-insert into positions values ('p2602100003', 'bed room', 7.0, 8.0, 9.0);
+insert into positions values ('p2602150002', 'drop zone', 0.2269, 0.2037, 0.7076);
+insert into positions values ('p2602150003', 'living room', 4.0, 5.0, 6.0);
+insert into positions values ('p2602150004', 'bed room', 7.0, 8.0, 9.0);
 
 create table schedules (
         schedule_id  varchar(11) primary key,
@@ -125,7 +125,7 @@ create table schedules (
 
 insert into schedules
 values
-    ('s2602070001', 'c2602070001', 'i2602150003', 'p2602070001', '15:40:00', 1, True);
+    ('s2602070001', 'c2602070001', 'i2602150001', 'p2602150004', '15:40:00', 1, True);
 
 create table history (
         history_id     varchar(11) primary key,

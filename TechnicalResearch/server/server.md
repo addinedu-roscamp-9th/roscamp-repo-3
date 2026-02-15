@@ -1,8 +1,7 @@
 # Server
 
 - [Project Structure](#project-structure)
-- [Environments](#environments)
-- [Trouble Shootig](#trouble-shooting)
+- [Trouble Shooting](#trouble-shooting)
 
 ---
 

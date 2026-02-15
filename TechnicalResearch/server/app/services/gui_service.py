@@ -111,12 +111,12 @@ def fetch_cmd(data):
 
     dz_pos = util_mapper.select_dz_pos()
     pinky_to_dz = pinky_service.cmd_pinky(dz_pos)
-    if pinky_to_dz is False:
+    if not pinky_to_dz:
         print("Pinky failed to reach DZ")
 
     pick_seq = pick_sequence(item_id)
     arm_pickup_res = cmd_arm(pick_seq)
-    if arm_pickup_res is False:
+    if not arm_pickup_res:
         print(f"Arm failed to pick up {item_id}")
 
     if pinky_to_dz and arm_pickup_res is False:
@@ -124,14 +124,14 @@ def fetch_cmd(data):
 
     drop_seq = drop_sequence()
     arm_drop_res = cmd_arm(drop_seq)
-    if arm_drop_res is False:
+    if not arm_drop_res:
         print("Arm failed to drop item to pinky")
 
     target_pos = util_mapper.select_position_by_id(position_id)
     if target_pos is None:
-        print(f"{target_pos} not found")
+        print(f"{position_id} not found")
     pinky_to_target_res = pinky_service.cmd_pinky(target_pos)
-    if pinky_to_target_res is False:
+    if not pinky_to_target_res:
         print("Pinky failed to reach target position")
 
     return {"success": True}
@@ -140,7 +140,7 @@ def fetch_cmd(data):
 def fetch_confirm():
     charger_pos = util_mapper.select_charger_pos()
     pinky_to_charger = pinky_service.cmd_pinky(charger_pos)
-    if pinky_to_charger is False:
+    if not pinky_to_charger:
         return {"success": False}
     return {"success": True}
 

@@ -47,5 +47,5 @@ async def test_fetch_cmd(item_id, position_id):
 
 
 if __name__ == "__main__":
-    success = asyncio.run(test_fetch_cmd("2602070001", "p2602070001"))
+    success = asyncio.run(test_fetch_cmd("i2602150001", "p2602150002"))
     sys.exit(0 if success else 1)
