@@ -14,7 +14,7 @@ project/
 │   ├── database/    ←  DB connection and mapper for query
 │   ├── routers/     ←  API endpoints (handles requests)
 │   ├── services/    ←  Business logic
-│   ├── models/      ←  Data structures (Pydantic)
+│   ├── models/      ←  Data structures
 │   └── main.py      ←  App entry point
 └── run.py       ←  Run this to start the server
 ```
