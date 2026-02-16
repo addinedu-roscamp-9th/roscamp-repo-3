@@ -1,5 +1,5 @@
 from app.database.connection import SessionLocal
-from app.models.tables import History, Item, Position, Angle, User
+from app.models.tables import Angle, History, Item, Position, User
 
 
 def login_user(user_id, user_pw):
@@ -23,7 +23,6 @@ def login_user(user_id, user_pw):
 def fetch_info():
     db = SessionLocal()
     try:
-        print("Inside fetch_info()")
         items = db.query(Item).all()
         positions = db.query(Position).all()
 
@@ -32,6 +31,68 @@ def fetch_info():
 
         return items, positions
 
+    finally:
+        db.close()
+
+
+def sel_position_by_id(position_id):
+    db = SessionLocal()
+    try:
+        return (
+            db.query(Position.x, Position.y, Position.w)
+            .filter(Position.position_id == position_id)
+            .first()
+        )
+    finally:
+        db.close()
+
+
+def sel_pos_by_name(position_name):
+    db = SessionLocal()
+    try:
+        return (
+            db.query(Position.x, Position.y, Position.w)
+            .filter(Position.position_name == position_name)
+            .first()
+        )
+    finally:
+        db.close()
+
+
+def sel_angle_by_item_id(item_id):
+    db = SessionLocal()
+    try:
+        return (
+            db.query(
+                Angle.j1,
+                Angle.j2,
+                Angle.j3,
+                Angle.j4,
+                Angle.j5,
+                Angle.j6,
+            )
+            .filter(Angle.item_id == item_id)
+            .first()
+        )
+    finally:
+        db.close()
+
+
+def sel_angle_by_angle_name(angle_name):
+    db = SessionLocal()
+    try:
+        return (
+            db.query(
+                Angle.j1,
+                Angle.j2,
+                Angle.j3,
+                Angle.j4,
+                Angle.j5,
+                Angle.j6,
+            )
+            .filter(Angle.angle_name == angle_name)
+            .first()
+        )
     finally:
         db.close()
 
@@ -54,36 +115,5 @@ def history_info():
     db = SessionLocal()
     try:
         return db.query(History).all()
-    finally:
-        db.close()
-
-
-def select_angle_by_item_id(item_id):
-    db = SessionLocal()
-    try:
-        return (
-            db.query(
-                Angle.j1,
-                Angle.j2,
-                Angle.j3,
-                Angle.j4,
-                Angle.j5,
-                Angle.j6,
-            )
-            .filter(Angle.item_id == item_id)
-            .first()
-        )
-    finally:
-        db.close()
-
-
-def select_position_by_id(pos_id):
-    db = SessionLocal()
-    try:
-        return (
-            db.query(Position.x, Position.y, Position.w)
-            .filter(Position.position_id == pos_id)
-            .first()
-        )
     finally:
         db.close()

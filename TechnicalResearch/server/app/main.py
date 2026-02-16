@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 
-from app.database import schedule_mapper
+from app.database.repositories import schedule_repository
 from app.routers import gui, jetcobot
 
 app = FastAPI(title="Roboto Server", redirect_slashes=False)
@@ -16,7 +16,7 @@ schedules = []
 async def select_schedules():
     global schedules
     try:
-        schedules = schedule_mapper.select_all_schedules()
+        schedules = schedule_repository.select_all_schedules()
     except OperationalError as e:
         print(f"\nDatabase connection error: {e}")
     except SQLAlchemyError as e:

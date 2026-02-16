@@ -4,7 +4,7 @@ from typing import List
 import httpx
 from dotenv import load_dotenv
 
-from app.database import gui_mapper, schedule_mapper, util_mapper
+from app.database.repositories import gui_repository, schedule_repository
 from app.models.tables import History
 from app.services import pinky_service
 
@@ -13,18 +13,28 @@ load_dotenv()
 JETCOBOT_HOST = os.getenv("JETCOBOT_HOST", "192.168.0.56")
 JETCOBOT_PORT = int(os.getenv("JETCOBOT_PORT", "8001"))
 
+POS_DZ = "drop zone"
+POS_CHARGER = "charger"
+
+ANGLE_SHELVE_SIDE = "shelve side"
+ANGLE_PINKY_SIDE = "pinky side"
+ANGLE_DROP = "drop"
+ANGLE_HOME = "home"
+ANGLE_TRASH_SIDE = "trash side"
+ANGLE_TRASH_GENERAL = "trash general"
+
 
 def login(data):
     user_id = data["id"]
     user_pw = data["pw"]
 
-    user_name = gui_mapper.login_user(user_id, user_pw)
+    user_name = gui_repository.login_user(user_id, user_pw)
 
     return {"user_name": user_name}
 
 
 def fetch_info():
-    items, positions = gui_mapper.fetch_info()
+    items, positions = gui_repository.fetch_info()
     print(f"items: {items}")
     print(f"positions: {positions}")
 
@@ -67,8 +77,8 @@ def create_angles(angle, gap):
 
 
 def drop_sequence():
-    drop_angle = util_mapper.select_drop_angle()
-    home_angle = util_mapper.select_home_angle()
+    drop_angle = gui_repository.sel_angle_by_angle_name(ANGLE_DROP)
+    home_angle = gui_repository.sel_angle_by_angle_name(ANGLE_HOME)
 
     return [
         create_angles(drop_angle, gap=100),
@@ -77,9 +87,9 @@ def drop_sequence():
 
 
 def pick_sequence(item_id):
-    shelve_side = util_mapper.select_shelve_side_angle()
-    pinky_side = util_mapper.select_pinky_side_angle()
-    pick_angle = util_mapper.select_angle_by_item_id(item_id)
+    shelve_side = gui_repository.sel_angle_by_angle_name(ANGLE_SHELVE_SIDE)
+    pinky_side = gui_repository.sel_angle_by_angle_name(ANGLE_PINKY_SIDE)
+    pick_angle = gui_repository.sel_angle_by_item_id(item_id)
 
     return [
         create_angles(shelve_side, gap=100),
@@ -109,7 +119,7 @@ def fetch_cmd(data):
     item_id = data.get("item_id")
     position_id = data.get("position_id")
 
-    dz_pos = util_mapper.select_dz_pos()
+    dz_pos = gui_repository.sel_pos_by_name(POS_DZ)
     pinky_to_dz = pinky_service.cmd_pinky(dz_pos)
     if not pinky_to_dz:
         print("Pinky failed to reach DZ")
@@ -127,7 +137,7 @@ def fetch_cmd(data):
     if not arm_drop_res:
         print("Arm failed to drop item to pinky")
 
-    target_pos = util_mapper.select_position_by_id(position_id)
+    target_pos = gui_repository.sel_position_by_id(position_id)
     if target_pos is None:
         print(f"{position_id} not found")
     pinky_to_target_res = pinky_service.cmd_pinky(target_pos)
@@ -138,7 +148,7 @@ def fetch_cmd(data):
 
 
 def fetch_confirm():
-    charger_pos = util_mapper.select_charger_pos()
+    charger_pos = gui_repository.sel_pos_by_name(POS_CHARGER)
     pinky_to_charger = pinky_service.cmd_pinky(charger_pos)
     if not pinky_to_charger:
         return {"success": False}
@@ -146,7 +156,7 @@ def fetch_confirm():
 
 
 def take_info():
-    positions = gui_mapper.take_info()
+    positions = gui_repository.take_info()
     if positions is None:
         return []
     return {
@@ -165,7 +175,7 @@ def take_info():
 
 def take_cmd(data):
     position_id = data.get("position_id")
-    target_pos = util_mapper.select_position_by_id(position_id)
+    target_pos = gui_repository.sel_position_by_id(position_id)
     pinky_to_target = pinky_service.cmd_pinky(target_pos)
     if not pinky_to_target:
         print("Pinky failed to reach target")
@@ -174,10 +184,10 @@ def take_cmd(data):
 
 
 def trash_sequence():
-    pinky_side = util_mapper.select_pinky_side_angle()
-    drop_angle = util_mapper.select_drop_angle()
-    trash_side = util_mapper.select_trash_angle()
-    trash_general = util_mapper.select_trash_general()
+    pinky_side = gui_repository.sel_angle_by_angle_name(ANGLE_PINKY_SIDE)
+    drop_angle = gui_repository.sel_angle_by_angle_name(ANGLE_DROP)
+    trash_side = gui_repository.sel_angle_by_angle_name(ANGLE_TRASH_SIDE)
+    trash_general = gui_repository.sel_angle_by_angle_name(ANGLE_TRASH_GENERAL)
 
     return [
         create_angles(pinky_side, 100),
@@ -189,7 +199,7 @@ def trash_sequence():
 
 
 def take_confirm():
-    dz_pos = util_mapper.select_dz_pos()
+    dz_pos = gui_repository.sel_pos_by_name(POS_DZ)
     pinky_to_dz = pinky_service.cmd_pinky(dz_pos)
     if not pinky_to_dz:
         print("Pinky failed to reach DZ")
@@ -202,7 +212,7 @@ def take_confirm():
         print("Arm failed to trash")
         return {"success": False}
 
-    charger_pos = util_mapper.select_charger_pos()
+    charger_pos = gui_repository.sel_pos_by_name(POS_CHARGER)
     pinky_to_charger = pinky_service.cmd_pinky(charger_pos)
     if not pinky_to_charger:
         print("pinky failed to go to charger")
@@ -211,7 +221,7 @@ def take_confirm():
 
 
 def schedule_info():
-    schedules = schedule_mapper.select_all_schedules()
+    schedules = schedule_repository.select_all_schedules()
 
     if not schedules:
         return []
@@ -239,11 +249,11 @@ def schedule_edit(data):
     action = data["action"]
     match action:
         case "add":
-            result = schedule_mapper.insert_schedule(data)
+            result = schedule_repository.insert_schedule(data)
         case "edit":
-            result = schedule_mapper.update_schedule(data)
+            result = schedule_repository.update_schedule(data)
         case "delete":
-            result = schedule_mapper.delete_schedule(data)
+            result = schedule_repository.delete_schedule(data)
         case _:
             pass
 
@@ -256,7 +266,7 @@ def schedule_edit(data):
 
 
 def history_info():
-    histories: List[History] = gui_mapper.history_info()
+    histories: List[History] = gui_repository.history_info()
 
     return {
         "histories": [
