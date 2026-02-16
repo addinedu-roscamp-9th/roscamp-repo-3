@@ -10,11 +10,12 @@
 ```
 project/
 ├── app/
-│   ├── database/    ←  DB connection and mapper for query
-│   ├── routers/     ←  API endpoints (handles requests)
-│   ├── services/    ←  Business logic
-│   ├── models/      ←  Data structures
-│   └── main.py      ←  App entry point
+│   ├── database/          ←  DB connection
+│   │   └── repositories/  ←  SQL queries
+│   ├── models/            ←  Data structures
+│   ├── routers/           ←  API endpoints
+│   ├── services/          ←  Business logic
+│   └── main.py            ←  App entry point
 └── run.py       ←  Run this to start the server
 ```
 
