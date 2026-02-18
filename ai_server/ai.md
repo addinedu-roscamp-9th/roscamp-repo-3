@@ -1,13 +1,5 @@
 # AI Server
 
-## Dependencies
-
-### PIP
-
-```sh
-pip install ultralytics
-```
-
 ---
 
 ## Environment
@@ -32,4 +24,17 @@ Start the venv:
 
 ```sh
 source .venv/bin/activate
+```
+
+---
+
+## Dot Env
+
+```sh
+GATEWAY_IP="192.168.0.22"
+GATEWAY_PORT="8000"
+GATEWAY_ENDPOINT="detection"
+
+ARM_IP="192.168.5.1"
+ARM_PORT="9001"
 ```

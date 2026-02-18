@@ -6,11 +6,13 @@ import sys
 import time
 
 import cv2
-import mediapipe.python.solutions.drawing_utils as mp_drawing
-import mediapipe.python.solutions.hands as mp_hands
 import numpy as np
 from dotenv import load_dotenv
+from mediapipe.tasks import python as mp_python
+from mediapipe.tasks.python import vision
 from ultralytics import YOLO
+
+import mediapipe as mp
 
 load_dotenv()
 
@@ -24,20 +26,25 @@ GATEWAY_ENDPOINT = os.getenv("GATEWAY_ENDPOINT", "detection")
 
 ARM_IP = os.getenv("ARM_IP", "192.168.5.1")
 ARM_PORT = int(os.getenv("ARM_PORT", "9001"))
-ARM_STOP_SIG_ENDPOINT = os.getenv("ARM_STOP_SIG_ENDPOINT", "stop")
 
 YOLO_MODEL_PATH = "./model/best.pt"
+HAND_LANDMARKER_PATH = "./mediapipe/hand_landmarker.task"
+
+UDP_SIZE = (2**16) - 1  # 65535 - max UDP datagram size
 
 try:
     yolo_model = YOLO(YOLO_MODEL_PATH)
     print("yolo loaded")
-    hands_model = mp_hands.Hands(
-        static_image_mode=False,
-        max_num_hands=1,
-        model_complexity=0,
-        min_detection_confidence=0.5,
+
+    base_options = mp_python.BaseOptions(model_asset_path=HAND_LANDMARKER_PATH)
+    hand_options = vision.HandLandmarkerOptions(
+        base_options=base_options,
+        num_hands=1,
+        min_hand_detection_confidence=0.5,
+        min_hand_presence_confidence=0.5,
         min_tracking_confidence=0.5,
     )
+    hands_model = vision.HandLandmarker.create_from_options(hand_options)
     print("mediapipe loaded")
 except Exception as e:
     print(f"Failed to load models: {e}")
@@ -55,18 +62,19 @@ stop_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 prev_time = 0
 process_fps = 0
 
+
 while True:
     try:
-        data = None
+        data = None  # reset data
         while True:
             try:
-                data, _ = sock.recvfrom(65535)
+                data, _ = sock.recvfrom(UDP_SIZE)  # assign latest packet
             except BlockingIOError:
                 break
-
         if data is None:
             continue
 
+        # turn it into img
         payload = json.loads(data.decode())
         img_bytes = base64.b64decode(payload["image"])
         frame = cv2.imdecode(np.frombuffer(img_bytes, np.uint8), cv2.IMREAD_COLOR)
@@ -83,16 +91,17 @@ while True:
         # object detection
         yolo_results = yolo_model.predict(source=frame, conf=0.6, verbose=False)
 
-        # hand detection
+        # hand detection (new Tasks API)
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        hand_results = hands_model.process(rgb_frame)
+        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_frame)
+        hand_results = hands_model.detect(mp_image)
 
         # yolo detection visualisation
         for r in yolo_results:
             for box in r.boxes:
                 # bbox corner grid
                 x1, y1, x2, y2 = map(int, box.xyxy[0].cpu().numpy())
-                # bbox center gric
+                # bbox center grid
                 cx, cy = (x1 + x2) // 2, (y1 + y2) // 2
                 cls_name = yolo_model.names[int(box.cls[0])]
                 # draw bbox outline
@@ -112,19 +121,8 @@ while True:
                 )
 
         # stop on hand detection
-        if hand_results.multi_hand_landmarks:
+        if hand_results.hand_landmarks:
             stop_sock.sendto(b"STOP", (ARM_IP, ARM_PORT))
-
-            for hand_landmarks in hand_results.multi_hand_landmarks:
-                mp_drawing.draw_landmarks(
-                    frame,
-                    hand_landmarks,
-                    mp_hands.HAND_CONNECTIONS,
-                    mp_drawing.DrawingSpec(
-                        color=(255, 0, 0), thickness=2, circle_radius=2
-                    ),
-                    mp_drawing.DrawingSpec(color=(255, 100, 100), thickness=2),
-                )
 
             cv2.putText(
                 frame,

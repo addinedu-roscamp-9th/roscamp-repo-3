@@ -231,3 +231,6 @@ __marimo__/
 .ionide
 
 # End of https://www.toptal.com/developers/gitignore/api/visualstudiocode
+
+# Ignore mediapipe task
+mediapipe/

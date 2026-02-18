@@ -7,12 +7,10 @@
 set -euo pipefail
 
 pip_packages=(
-  "ultralytics"
-  "opencv-python"
-)
-
-pip_packages_no_deps=(
+  "dotenv"
   "mediapipe"
+  "opencv-python"
+  "ultralytics"
 )
 
 # create venv if not already created
@@ -29,10 +27,8 @@ pip install -U pip
 # install required dependencies with pip
 pip install "${pip_packages[@]}"
 
-pip install --no-deps "${pip_packages_no_deps[@]}"
-
 if [ ! -f ./mediapipe/hand_landmarker.task ]; then
-  mkdir mediapipe
+  mkdir -p mediapipe
   wget -O mediapipe/hand_landmarker.task \
     https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task
 fi
