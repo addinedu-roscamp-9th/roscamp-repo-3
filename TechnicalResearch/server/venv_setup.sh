@@ -22,6 +22,7 @@ pip_packages=(
   "typeguard"
   "uvicorn"
   "websockets"
+  "requests"
 )
 
 apt_packages=(

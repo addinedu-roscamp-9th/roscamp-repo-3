@@ -1,51 +1,77 @@
-from fastapi import APIRouter
+# app/routers/pinky.py
+import time
 
-from ..models.pinky_model import RobotCommand, RobotStatus
+from fastapi import APIRouter
+from pydantic import BaseModel
 
 router = APIRouter()
 
-# 로봇별 명령 저장소
-robot_commands = {}
+# -------------------------
+# 메모리 저장소(유지형)
+# -------------------------
+nav_goals: dict[str, dict] = (
+    {}
+)  # {robot_id: {"goal_id": int, "x":..., "y":..., "yaw":..., "ts":...}}
+nav_results: dict[str, dict] = (
+    {}
+)  # {robot_id: {"goal_id": int, "status": "...", "message": "...", "ts":...}}
 
 
-@router.post("/robot/cmd/{robot_id}")
-def set_robot_cmd(robot_id: str, cmd: RobotCommand):
+class NavGoal(BaseModel):
+    x: float
+    y: float
+    yaw: float = 0.0
+
+
+class NavResult(BaseModel):
+    goal_id: int
+    status: str  # "SUCCEEDED" / "FAILED" / "CANCELED" / "RUNNING"
+    message: str | None = None
+
+
+@router.post("/nav/goal/{robot_id}")
+def set_nav_goal(robot_id: str, goal: NavGoal):
     """
-    로봇에게 실행할 명령을 등록
-    예:
-    {
-        "type": "move",
-        "distance_cm": 10,
-        "speed": 0.2
+    GUI가 목표 좌표를 보내면 서버가 저장한다.
+    goal은 삭제하지 않고 유지한다.
+    goal_id를 증가시켜서 '새 goal인지' 판별 가능하게 한다.
+    """
+    prev = nav_goals.get(robot_id)
+    new_goal_id = (prev["goal_id"] + 1) if prev and "goal_id" in prev else 1
+
+    nav_goals[robot_id] = {
+        "goal_id": new_goal_id,
+        "x": goal.x,
+        "y": goal.y,
+        "yaw": goal.yaw,
+        "ts": time.time(),
     }
+    return {"result": "ok", "robot_id": robot_id, "goal": nav_goals[robot_id]}
+
+
+@router.get("/nav/goal/{robot_id}")
+def get_nav_goal(robot_id: str):
     """
-    robot_commands[robot_id] = cmd
-    return {"result": "ok", "robot_id": robot_id, "cmd": cmd}
-
-
-@router.get("/robot/cmd/{robot_id}")
-def get_robot_cmd(robot_id: str):
+    Pinky가 주기적으로 가져간다.
+    유지형이므로 항상 마지막 goal을 준다.
     """
-    핑키가 명령을 가져가면 1회성으로 소비
+    return nav_goals.get(robot_id, {"type": "idle"})
+
+
+@router.post("/nav/result/{robot_id}")
+def post_nav_result(robot_id: str, result: NavResult):
     """
-    cmd = robot_commands.get(robot_id)
-
-    if robot_id in robot_commands:
-        robot_commands.pop(robot_id)
-
-    # 명령이 없으면 idle 상태 전달
-    return cmd or {"type": "idle"}
-
-
-@router.post("/robot/status")
-def update_robot_status(data: RobotStatus):
+    Pinky가 주행 결과를 서버로 되돌려준다(선택).
     """
-    핑키 상태 수신용
-    (위치, 동작 상태 등)
-    """
+    nav_results[robot_id] = {
+        "goal_id": result.goal_id,
+        "status": result.status,
+        "message": result.message,
+        "ts": time.time(),
+    }
     return {"result": "ok"}
 
 
-@router.get("/ping")
-def ping():
-    return {"msg": "pinky pong"}
+@router.get("/nav/result/{robot_id}")
+def get_nav_result(robot_id: str):
+    return nav_results.get(robot_id, {"type": "none"})
