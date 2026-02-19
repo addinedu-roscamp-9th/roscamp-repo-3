@@ -18,7 +18,7 @@ GATEWAY_PORT = int(os.getenv("GATEWAY_PORT", "8000"))
 ENDPOINT = os.getenv("ENDPOINT", "jetcobot")
 
 HTTP_HOST = "0.0.0.0"
-HTTP_PORT = 8001
+HTTP_PORT = 8080
 
 move = None
 

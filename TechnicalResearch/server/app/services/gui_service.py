@@ -188,6 +188,7 @@ def trash_sequence():
     drop_angle = gui_repository.sel_angle_by_angle_name(ANGLE_DROP)
     trash_side = gui_repository.sel_angle_by_angle_name(ANGLE_TRASH_SIDE)
     trash_general = gui_repository.sel_angle_by_angle_name(ANGLE_TRASH_GENERAL)
+    home_angle = gui_repository.sel_angle_by_angle_name(ANGLE_HOME)
 
     return [
         create_angles(pinky_side, 100),
@@ -195,6 +196,7 @@ def trash_sequence():
         create_angles(pinky_side, 0),
         create_angles(trash_side, 0),
         create_angles(trash_general, 100),
+        create_angles(home_angle, 100),
     ]
 
 
@@ -217,6 +219,7 @@ def take_confirm():
     if not pinky_to_charger:
         print("pinky failed to go to charger")
         return {"success": False}
+
     return {"success": True}
 
 
