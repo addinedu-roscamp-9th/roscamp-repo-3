@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox, scrolledtext
 import json
 from datetime import datetime
-from urllib import request, error
+import websocket
 from urllib.parse import urlencode
 import threading
 
@@ -145,31 +145,26 @@ class LoginScreen(BaseScreen):
         self.setup_ui()
 
     def setup_ui(self):
-        # Center frame
         center_frame = tk.Frame(self, bg="#c0c0c0")
         center_frame.place(relx=0.5, rely=0.4, anchor="center")
 
-        # Server status
         self.status_label = tk.Label(
             center_frame,
-            text=f"서버: {self.app.SERVER_URL}",
+            text=f"",
             font=("Courier New", 10),
             bg="#c0c0c0",
             fg="#666",
         )
         self.status_label.pack(pady=(0, 10))
 
-        # Login box
         login_box = tk.Frame(center_frame, bg="#808080", relief="solid", bd=3)
         login_box.pack(padx=20, pady=20)
 
-        # Title
         title = tk.Label(
             login_box, text="Login", font=("Courier New", 16, "bold"), bg="#808080"
         )
         title.pack(pady=(20, 10))
 
-        # ID field
         id_label = tk.Label(
             login_box, text="I D :", font=("Courier New", 12), bg="#808080"
         )
@@ -180,7 +175,6 @@ class LoginScreen(BaseScreen):
         )
         self.user_id.pack(padx=20, pady=(0, 10))
 
-        # Password field
         pw_label = tk.Label(
             login_box, text="Pw :", font=("Courier New", 12), bg="#808080"
         )
@@ -197,28 +191,20 @@ class LoginScreen(BaseScreen):
         self.user_pw.pack(padx=20, pady=(0, 10))
         self.user_pw.bind("<Return>", lambda e: self.login())
 
-        # Login button
         login_btn = RetroButton(login_box, "로그인", command=self.login, bg="#4a90e2")
         login_btn.pack(padx=20, pady=(10, 20), fill="x")
 
-        # Server connect button
         connect_btn = RetroButton(
             center_frame, "Server connect", command=self.connect_server, bg="#00ff00"
         )
         connect_btn.pack(pady=10)
 
-        # Help text
         help_text = tk.Label(
-            center_frame,
-            text="서버 연결 안될 시: 메뉴 > 설정 > 서버 주소 변경",
-            font=("Courier New", 9),
-            bg="#c0c0c0",
-            fg="#666",
+            center_frame, text="", font=("Courier New", 9), bg="#c0c0c0", fg="#666"
         )
         help_text.pack(pady=(10, 0))
 
     def login(self):
-        """Handle login"""
         user_id = self.user_id.get().strip()
         user_pw = self.user_pw.get().strip()
 
@@ -226,20 +212,25 @@ class LoginScreen(BaseScreen):
             self.app.console.log("ID와 비밀번호를 입력하세요", True)
             return
 
-        result = self.app.send_message(
-            "login", {"user_id": user_id, "user_pw": user_pw}
-        )
+        result = self.app.send_message("login", {"id": user_id, "pw": user_pw})
 
         if result["success"]:
-            self.app.current_user = user_id
-            self.app.show_screen("home")
-            self.app.console.log("로그인 성공!")
+            user_name = result.get("data", {}).get("data", {}).get("user_name")
+            if user_name:
+                self.app.current_user = user_id
+                self.app.show_screen("home")
+                self.app.console.log(f"로그인 성공! ({user_name})")
+                messagebox.showinfo("환영합니다", f"{user_name}님 환영합니다!")
+            else:
+                self.app.console.log(
+                    "로그인 실패 - ID 또는 비밀번호를 확인하세요", True
+                )
+                self.user_pw.delete(0, "end")
         else:
             self.app.console.log("로그인 실패", True)
             self.user_pw.delete(0, "end")
 
     def connect_server(self):
-        """Connect to server"""
         result = self.app.send_message("connect")
         if result["success"]:
             self.app.console.log("서버에 연결되었습니다!")
@@ -255,16 +246,14 @@ class HomeScreen(BaseScreen):
         self.setup_ui()
 
     def setup_ui(self):
-        # Center frame
         center_frame = tk.Frame(self, bg="#c0c0c0")
         center_frame.place(relx=0.5, rely=0.5, anchor="center")
 
-        # Menu buttons
         buttons = [
-            ("물건 가져오기 (Fetch)", lambda: self.app.show_screen("fetch")),
-            ("물건 갖다놓기 (Take)", lambda: self.app.show_screen("take")),
-            ("스케줄 (Schedule)", lambda: self.app.show_screen("schedule_list")),
-            ("기록 보관 (History)", lambda: self.app.show_screen("history")),
+            ("물건 가져오기", lambda: self.app.show_screen("fetch")),
+            ("물건 갖다놓기", lambda: self.app.show_screen("take")),
+            ("  스케줄    ", lambda: self.app.show_screen("schedule_list")),
+            ("   기록    ", lambda: self.app.show_screen("history")),
         ]
 
         for text, command in buttons:
@@ -279,26 +268,20 @@ class FetchScreen(BaseScreen):
         super().__init__(parent, app)
         self.selected_room = None
         self.room_buttons = []
-        self.rooms = ["Room A", "Room B", "Room C", "Room D", "Room E", "Room F"]
+        self.rooms = [" 안방 ", " 거실 "]
         self.setup_ui()
 
     def setup_ui(self):
-        # Back button
         back_btn = RetroButton(
             self, "◀ 뒤로가기", command=lambda: self.app.show_screen("home")
         )
         back_btn.pack(anchor="w", padx=10, pady=10)
 
-        # Title
         title = tk.Label(
-            self,
-            text="물건 가져오기 (Fetch)",
-            font=("Courier New", 20, "bold"),
-            bg="#c0c0c0",
+            self, text="물건 가져오기", font=("Courier New", 20, "bold"), bg="#c0c0c0"
         )
         title.pack(pady=10)
 
-        # Content box
         content_box = tk.Frame(self, bg="white", relief="solid", bd=3)
         content_box.pack(padx=20, pady=10, fill="both", expand=True)
 
@@ -310,7 +293,6 @@ class FetchScreen(BaseScreen):
         )
         instruction.pack(pady=10)
 
-        # Room grid
         grid_frame = tk.Frame(content_box, bg="white")
         grid_frame.pack(pady=20)
 
@@ -321,28 +303,21 @@ class FetchScreen(BaseScreen):
             btn.grid(row=i // 3, column=i % 3, padx=10, pady=10, ipadx=20, ipady=20)
             self.room_buttons.append(btn)
 
-        # Execute button
         execute_btn = RetroButton(
             self, "물건 가져오기 실행", command=self.execute_fetch, bg="#4a90e2"
         )
         execute_btn.pack(pady=20, ipadx=40, ipady=20)
 
     def select_room(self, room):
-        """Select a room"""
-        # Deselect all
         for btn in self.room_buttons:
             btn["bg"] = "#e8e8e8"
-
-        # Select current
         for btn in self.room_buttons:
             if btn["text"] == room:
                 btn["bg"] = "#4a90e2"
                 btn["fg"] = "white"
-
         self.selected_room = room
 
     def execute_fetch(self):
-        """Execute fetch command"""
         if not self.selected_room:
             self.app.console.log("방을 선택하세요", True)
             return
@@ -371,33 +346,25 @@ class TakeScreen(BaseScreen):
         self.setup_ui()
 
     def setup_ui(self):
-        # Back button
         back_btn = RetroButton(
             self, "◀ 뒤로가기", command=lambda: self.app.show_screen("home")
         )
         back_btn.pack(anchor="w", padx=10, pady=10)
 
-        # Title
         title = tk.Label(
-            self,
-            text="물건 갖다놓기 (Take)",
-            font=("Courier New", 20, "bold"),
-            bg="#c0c0c0",
+            self, text="물건 갖다놓기", font=("Courier New", 20, "bold"), bg="#c0c0c0"
         )
         title.pack(pady=10)
 
-        # Center frame for execute button
         center_frame = tk.Frame(self, bg="#c0c0c0")
         center_frame.place(relx=0.5, rely=0.5, anchor="center")
 
-        # Execute button
         execute_btn = RetroButton(
             center_frame, "물건 갖다놓기 실행", command=self.execute_take, bg="#ff9800"
         )
         execute_btn.pack(ipadx=40, ipady=30)
 
     def execute_take(self):
-        """Execute take command"""
         result = self.app.send_message("take_req")
         if not result["success"]:
             self.app.console.log(f"요청 실패: {result.get('error', '')}", True)
@@ -420,7 +387,6 @@ class ScheduleListScreen(BaseScreen):
         self.setup_ui()
 
     def setup_ui(self):
-        # Header
         header = tk.Frame(self, bg="#c0c0c0")
         header.pack(fill="x", padx=10, pady=10)
 
@@ -430,10 +396,7 @@ class ScheduleListScreen(BaseScreen):
         back_btn.pack(side="left")
 
         title = tk.Label(
-            header,
-            text="스케줄 (Schedule)",
-            font=("Courier New", 16, "bold"),
-            bg="#c0c0c0",
+            header, text="   스케줄   ", font=("Courier New", 16, "bold"), bg="#c0c0c0"
         )
         title.pack(side="left", padx=20)
 
@@ -442,7 +405,6 @@ class ScheduleListScreen(BaseScreen):
         )
         refresh_btn.pack(side="right")
 
-        # Schedule list (scrollable)
         list_frame = tk.Frame(self, bg="white", relief="solid", bd=3)
         list_frame.pack(fill="both", expand=True, padx=20, pady=10)
 
@@ -467,7 +429,6 @@ class ScheduleListScreen(BaseScreen):
             ),
         )
 
-        # Buttons
         button_frame = tk.Frame(self, bg="#c0c0c0")
         button_frame.pack(fill="x", padx=20, pady=10)
 
@@ -482,10 +443,8 @@ class ScheduleListScreen(BaseScreen):
         delete_btn.pack(side="right", fill="x", expand=True, padx=(5, 0))
 
     def load_schedules(self):
-        """Load schedules from server"""
         result = self.app.send_message("schedule_req")
 
-        # Clear existing items
         for widget in self.schedule_container.winfo_children():
             widget.destroy()
 
@@ -518,11 +477,9 @@ class ScheduleListScreen(BaseScreen):
             self.app.console.log("스케줄 로드 실패", True)
 
     def create_schedule_item(self, schedule):
-        """Create a schedule item widget"""
         item = tk.Frame(self.schedule_container, bg="#e8e8e8", relief="solid", bd=2)
         item.pack(fill="x", padx=10, pady=5)
 
-        # Info
         info_frame = tk.Frame(item, bg="#e8e8e8")
         info_frame.pack(side="left", fill="both", expand=True, padx=10, pady=10)
 
@@ -555,7 +512,6 @@ class ScheduleListScreen(BaseScreen):
             anchor="w",
         ).pack(fill="x")
 
-        # Buttons
         btn_frame = tk.Frame(item, bg="#e8e8e8")
         btn_frame.pack(side="right", padx=10)
 
@@ -576,17 +532,14 @@ class ScheduleListScreen(BaseScreen):
         delete_btn.pack(side="left", padx=2)
 
     def show_add_schedule(self):
-        """Show add schedule screen"""
         self.app.screens["schedule_edit"].reset_for_new()
         self.app.show_screen("schedule_edit")
 
     def edit_schedule(self, schedule_id):
-        """Edit a schedule"""
         self.app.screens["schedule_edit"].editing_schedule_id = schedule_id
         self.app.show_screen("schedule_edit")
 
     def delete_schedule(self, schedule_id):
-        """Delete a schedule"""
         result = self.app.send_message(
             "schedule_edit",
             {"action": "delete", "schedule": {"schedule_id": schedule_id}},
@@ -599,180 +552,350 @@ class ScheduleListScreen(BaseScreen):
             self.app.console.log("스케줄 삭제 실패", True)
 
     def delete_selected(self):
-        """Delete selected schedule"""
         self.app.console.log("삭제할 스케줄을 목록에서 선택하세요")
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# DRUM ROLL COMPONENTS
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+class DrumRollColumn(tk.Frame):
+    """A single drum-roll (slot-machine style) column."""
+
+    ITEM_H = 72  # pixel height of each cell
+    VISIBLE = 3  # how many cells are visible (odd number keeps center clear)
+    ANIM_STEPS = 8  # animation steps per scroll tick
+    ANIM_MS = 12  # ms between animation frames
+
+    def __init__(self, parent, items, width=110, **kwargs):
+        canvas_h = self.ITEM_H * self.VISIBLE
+        super().__init__(parent, bg="#111111", width=width, height=canvas_h, **kwargs)
+        self.pack_propagate(False)
+
+        self.items = items
+        self.col_width = width
+        self._index = 0
+        self._anim_job = None
+        self._drag_start_y = 0
+        self._drag_start_idx = 0
+
+        # Canvas
+        self.canvas = tk.Canvas(
+            self,
+            width=width,
+            height=canvas_h,
+            bg="#111111",
+            highlightthickness=0,
+        )
+        self.canvas.pack(fill="both", expand=True)
+
+        # Selection highlight (centre row)
+        mid_y0 = self.ITEM_H
+        mid_y1 = self.ITEM_H * 2
+        self.canvas.create_rectangle(
+            3,
+            mid_y0,
+            width - 3,
+            mid_y1,
+            outline="#4a90e2",
+            width=2,
+            fill="#1c2340",
+            tags="highlight",
+        )
+        # Top/bottom fade overlays
+        self.canvas.create_rectangle(
+            0,
+            0,
+            width,
+            self.ITEM_H,
+            fill="#111111",
+            stipple="gray50",
+            outline="",
+            tags="fade",
+        )
+        self.canvas.create_rectangle(
+            0,
+            self.ITEM_H * 2,
+            width,
+            canvas_h,
+            fill="#111111",
+            stipple="gray50",
+            outline="",
+            tags="fade",
+        )
+
+        self._draw(0)
+
+        # Bindings
+        for widget in (self, self.canvas):
+            widget.bind("<MouseWheel>", self._on_wheel)
+            widget.bind("<Button-4>", lambda e: self._step(-1))
+            widget.bind("<Button-5>", lambda e: self._step(1))
+            widget.bind("<ButtonPress-1>", self._drag_start)
+            widget.bind("<B1-Motion>", self._drag_move)
+            widget.bind("<ButtonRelease-1>", self._drag_end)
+
+    # ── drawing ──────────────────────────────────────────────────────────────
+
+    def _draw(self, pixel_offset=0):
+        self.canvas.delete("label")
+        for row in range(self.VISIBLE):
+            idx = (self._index + row - 1) % len(self.items)
+            y = row * self.ITEM_H + self.ITEM_H // 2 + pixel_offset
+            is_center = row == 1
+            self.canvas.create_text(
+                self.col_width // 2,
+                y,
+                text=self.items[idx],
+                font=(
+                    "Courier New",
+                    15 if is_center else 11,
+                    "bold" if is_center else "normal",
+                ),
+                fill="#ffffff" if is_center else "#444444",
+                tags="label",
+            )
+        self.canvas.tag_raise("highlight")
+        self.canvas.tag_raise("label")
+        self.canvas.tag_raise("fade")
+
+    # ── scroll / animation ───────────────────────────────────────────────────
+
+    def _step(self, direction, extra_callback=None):
+        """Scroll one item in direction (+1 = down = next item)."""
+        if self._anim_job is not None:
+            self.after_cancel(self._anim_job)
+            self._anim_job = None
+
+        self._index = (self._index + direction) % len(self.items)
+        self._animate(-direction * self.ITEM_H, 0, extra_callback)
+
+    def _animate(self, start_offset, step, callback):
+        remaining = self.ANIM_STEPS - step
+        if remaining <= 0:
+            self._draw(0)
+            if callback:
+                callback()
+            return
+        offset = int(start_offset * remaining / self.ANIM_STEPS)
+        self._draw(offset)
+        self._anim_job = self.after(
+            self.ANIM_MS,
+            lambda: self._animate(start_offset, step + 1, callback),
+        )
+
+    # ── event handlers ───────────────────────────────────────────────────────
+
+    def _on_wheel(self, event):
+        direction = -1 if event.delta > 0 else 1
+        self._step(direction)
+
+    def _drag_start(self, event):
+        self._drag_start_y = event.y
+        self._drag_start_idx = self._index
+
+    def _drag_move(self, event):
+        delta = event.y - self._drag_start_y
+        steps = int(-delta / (self.ITEM_H // 2))
+        new_idx = (self._drag_start_idx + steps) % len(self.items)
+        if new_idx != self._index:
+            self._index = new_idx
+        pixel_offset = (
+            -(delta % self.ITEM_H) if delta >= 0 else ((-delta) % self.ITEM_H)
+        )
+        self._draw(int(pixel_offset * 0.6))
+
+    def _drag_end(self, event):
+        self._draw(0)
+
+    # ── public API ───────────────────────────────────────────────────────────
+
+    def get_value(self):
+        return self.items[self._index]
+
+    def get_index(self):
+        return self._index
+
+    def set_index(self, idx):
+        self._index = idx % len(self.items)
+        self._draw(0)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SCHEDULE EDIT SCREEN  (drum-roll version)
+# ─────────────────────────────────────────────────────────────────────────────
+
+
 class ScheduleEditScreen(BaseScreen):
-    """Schedule edit/add screen"""
+    """Schedule add/edit screen with a drum-roll picker UI."""
 
     def __init__(self, parent, app):
         super().__init__(parent, app)
+        self.configure(bg="#111111")
         self.editing_schedule_id = None
-        self.schedule_data = {"item": None, "location": None, "cycle": None}
-        self.items = ["물건 1", "물건 2", "물건 3", "물건 4", "물건 5", "물건 6"]
-        self.locations = ["장소 A", "장소 B", "장소 C", "장소 D", "장소 E", "장소 F"]
-        self.cycles = ["매일", "2일마다", "3일마다", "일주일", "2주일", "한달"]
-        self.setup_ui()
 
-    def setup_ui(self):
-        # Back button
-        back_btn = RetroButton(self, "◀ 뒤로가기", command=self.cancel_edit)
-        back_btn.pack(anchor="w", padx=10, pady=10)
+        self.hours = [str(h).zfill(2) for h in range(24)]
+        self.minutes = [str(m).zfill(2) for m in range(0, 60, 5)]
+        self.items = ["초코스틱", "우유팩", "약통"]
+        self.locations = ["안방", "거실", "Pick Up"]
+        self.cycles = [f"{i}일 주기" for i in range(1, 8)]
 
-        # Title
-        self.title_label = tk.Label(
-            self, text="스케줄 추가", font=("Courier New", 20, "bold"), bg="#c0c0c0"
+        self._setup_ui()
+        self._start_preview_loop()
+
+    def _setup_ui(self):
+        # ── Header ──────────────────────────────────────────────────────────
+        header = tk.Frame(self, bg="#111111")
+        header.pack(fill="x", padx=15, pady=(12, 4))
+
+        tk.Button(
+            header,
+            text="◀ 뒤로가기",
+            command=self.cancel_edit,
+            font=("Courier New", 11, "bold"),
+            bg="#222222",
+            fg="#888888",
+            relief="flat",
+            padx=12,
+            pady=7,
+            cursor="hand2",
+        ).pack(side="left")
+
+        self.title_lbl = tk.Label(
+            header,
+            text="스케줄 추가",
+            font=("Courier New", 17, "bold"),
+            bg="#111111",
+            fg="#ffffff",
         )
-        self.title_label.pack(pady=10)
+        self.title_lbl.pack(side="left", padx=16)
 
-        # Content box
-        content_box = tk.Frame(self, bg="white", relief="solid", bd=3)
-        content_box.pack(padx=20, pady=10, fill="both", expand=True)
+        # ── Preview bar ─────────────────────────────────────────────────────
+        preview_bar = tk.Frame(self, bg="#141428")
+        preview_bar.pack(fill="x", padx=15, pady=(0, 8))
 
-        # Time input
-        time_label = tk.Label(
-            content_box, text="시간", font=("Courier New", 12, "bold"), bg="white"
+        self.preview_lbl = tk.Label(
+            preview_bar,
+            text="09:00  |  초코스틱  |  안방  |  1일 주기",
+            font=("Courier New", 12),
+            bg="#141428",
+            fg="#4a90e2",
+            pady=7,
         )
-        time_label.pack(anchor="w", padx=20, pady=(10, 5))
+        self.preview_lbl.pack()
 
-        time_frame = tk.Frame(content_box, bg="white")
-        time_frame.pack(fill="x", padx=20, pady=5)
+        # ── Column labels ────────────────────────────────────────────────────
+        col_specs = [
+            ("시(Hour)", self.hours, 90),
+            ("분(Min)", self.minutes, 90),
+            ("물건", self.items, 140),
+            ("장소", self.locations, 130),
+            ("주기", self.cycles, 130),
+        ]
 
-        hour_frame = tk.Frame(time_frame, bg="white")
-        hour_frame.pack(side="left", fill="x", expand=True, padx=(0, 10))
-        tk.Label(
-            hour_frame, text="시(Hour)", font=("Courier New", 10), bg="white"
-        ).pack()
-        self.hour_input = tk.Spinbox(
-            hour_frame,
-            from_=0,
-            to=23,
-            font=("Courier New", 14),
-            width=10,
-            relief="solid",
-            bd=2,
-        )
-        self.hour_input.delete(0, "end")
-        self.hour_input.insert(0, "9")
-        self.hour_input.pack()
+        labels_row = tk.Frame(self, bg="#111111")
+        labels_row.pack(padx=15, fill="x")
 
-        minute_frame = tk.Frame(time_frame, bg="white")
-        minute_frame.pack(side="left", fill="x", expand=True)
-        tk.Label(
-            minute_frame, text="분(Minute)", font=("Courier New", 10), bg="white"
-        ).pack()
-        self.minute_input = tk.Spinbox(
-            minute_frame,
-            from_=0,
-            to=59,
-            font=("Courier New", 14),
-            width=10,
-            relief="solid",
-            bd=2,
-        )
-        self.minute_input.delete(0, "end")
-        self.minute_input.insert(0, "0")
-        self.minute_input.pack()
+        for lbl_text, _, w in col_specs:
+            cell = tk.Frame(labels_row, bg="#111111", width=w)
+            cell.pack(side="left", padx=4)
+            cell.pack_propagate(False)
+            tk.Label(
+                cell,
+                text=lbl_text,
+                font=("Courier New", 9),
+                bg="#111111",
+                fg="#555555",
+            ).pack()
 
-        # Item selector
-        item_label = tk.Label(
-            content_box, text="물건", font=("Courier New", 12, "bold"), bg="white"
-        )
-        item_label.pack(anchor="w", padx=20, pady=(10, 5))
+        # ── Drum-roll columns ────────────────────────────────────────────────
+        drums_row = tk.Frame(self, bg="#111111")
+        drums_row.pack(padx=15, pady=4, fill="both", expand=True)
 
-        self.item_display = RetroButton(
-            content_box, "선택하세요", command=lambda: self.open_popup("item")
-        )
-        self.item_display.pack(fill="x", padx=20, pady=5)
+        self.hour_drum = DrumRollColumn(drums_row, self.hours, width=90)
+        self.minute_drum = DrumRollColumn(drums_row, self.minutes, width=90)
+        self.item_drum = DrumRollColumn(drums_row, self.items, width=140)
+        self.location_drum = DrumRollColumn(drums_row, self.locations, width=130)
+        self.cycle_drum = DrumRollColumn(drums_row, self.cycles, width=130)
 
-        # Location selector
-        location_label = tk.Label(
-            content_box, text="장소", font=("Courier New", 12, "bold"), bg="white"
-        )
-        location_label.pack(anchor="w", padx=20, pady=(10, 5))
+        for drum in (
+            self.hour_drum,
+            self.minute_drum,
+            self.item_drum,
+            self.location_drum,
+            self.cycle_drum,
+        ):
+            drum.pack(side="left", padx=4)
 
-        self.location_display = RetroButton(
-            content_box, "선택하세요", command=lambda: self.open_popup("location")
-        )
-        self.location_display.pack(fill="x", padx=20, pady=5)
+        # Default: 09:00
+        self.hour_drum.set_index(9)
 
-        # Cycle selector
-        cycle_label = tk.Label(
-            content_box, text="주기", font=("Courier New", 12, "bold"), bg="white"
-        )
-        cycle_label.pack(anchor="w", padx=20, pady=(10, 5))
+        # ── Action buttons ───────────────────────────────────────────────────
+        btn_row = tk.Frame(self, bg="#111111")
+        btn_row.pack(fill="x", padx=15, pady=12)
 
-        self.cycle_display = RetroButton(
-            content_box, "선택하세요", command=lambda: self.open_popup("cycle")
-        )
-        self.cycle_display.pack(fill="x", padx=20, pady=5)
+        tk.Button(
+            btn_row,
+            text="저장",
+            command=self.save_schedule,
+            font=("Courier New", 13, "bold"),
+            bg="#4a90e2",
+            fg="white",
+            relief="flat",
+            padx=20,
+            pady=12,
+            cursor="hand2",
+        ).pack(side="left", fill="x", expand=True, padx=(0, 5))
 
-        # Action buttons
-        button_frame = tk.Frame(self, bg="#c0c0c0")
-        button_frame.pack(fill="x", padx=20, pady=10)
+        tk.Button(
+            btn_row,
+            text="취소",
+            command=self.cancel_edit,
+            font=("Courier New", 13, "bold"),
+            bg="#2a2a2a",
+            fg="#888888",
+            relief="flat",
+            padx=20,
+            pady=12,
+            cursor="hand2",
+        ).pack(side="right", fill="x", expand=True, padx=(5, 0))
 
-        save_btn = RetroButton(
-            button_frame, "저장", command=self.save_schedule, bg="#4caf50"
-        )
-        save_btn.pack(side="left", fill="x", expand=True, padx=(0, 5))
+    # ── preview loop ─────────────────────────────────────────────────────────
 
-        cancel_btn = RetroButton(
-            button_frame, "취소", command=self.cancel_edit, bg="#f44336"
-        )
-        cancel_btn.pack(side="right", fill="x", expand=True, padx=(5, 0))
+    def _start_preview_loop(self):
+        self._update_preview()
+
+    def _update_preview(self):
+        try:
+            h = self.hour_drum.get_value()
+            m = self.minute_drum.get_value()
+            it = self.item_drum.get_value()
+            lo = self.location_drum.get_value()
+            cy = self.cycle_drum.get_value()
+            self.preview_lbl.config(text=f"{h}:{m}  |  {it}  |  {lo}  |  {cy}")
+        except Exception:
+            pass
+        self.after(150, self._update_preview)
+
+    # ── public API ────────────────────────────────────────────────────────────
 
     def reset_for_new(self):
-        """Reset form for new schedule"""
         self.editing_schedule_id = None
-        self.title_label["text"] = "스케줄 추가"
-        self.hour_input.delete(0, "end")
-        self.hour_input.insert(0, "9")
-        self.minute_input.delete(0, "end")
-        self.minute_input.insert(0, "0")
-        self.item_display["text"] = "선택하세요"
-        self.location_display["text"] = "선택하세요"
-        self.cycle_display["text"] = "선택하세요"
-        self.schedule_data = {"item": None, "location": None, "cycle": None}
-
-    def open_popup(self, popup_type):
-        """Open popup selector"""
-        if popup_type == "item":
-            dialog = PopupSelector(self, "물건 선택", self.items)
-            self.wait_window(dialog)
-            if dialog.selected_value:
-                self.schedule_data["item"] = dialog.selected_value
-                self.item_display["text"] = dialog.selected_value
-
-        elif popup_type == "location":
-            dialog = PopupSelector(self, "장소 선택", self.locations)
-            self.wait_window(dialog)
-            if dialog.selected_value:
-                self.schedule_data["location"] = dialog.selected_value
-                self.location_display["text"] = dialog.selected_value
-
-        elif popup_type == "cycle":
-            dialog = PopupSelector(self, "주기 선택", self.cycles)
-            self.wait_window(dialog)
-            if dialog.selected_value:
-                self.schedule_data["cycle"] = str(dialog.selected_index + 1)
-                self.cycle_display["text"] = dialog.selected_value
+        self.title_lbl["text"] = "스케줄 추가"
+        self.hour_drum.set_index(9)
+        self.minute_drum.set_index(0)
+        self.item_drum.set_index(0)
+        self.location_drum.set_index(0)
+        self.cycle_drum.set_index(0)
 
     def save_schedule(self):
-        """Save schedule"""
-        if not all(
-            [
-                self.schedule_data["item"],
-                self.schedule_data["location"],
-                self.schedule_data["cycle"],
-            ]
-        ):
-            self.app.console.log("모든 항목을 선택하세요", True)
-            return
-
-        hour = self.hour_input.get().zfill(2)
-        minute = self.minute_input.get().zfill(2)
+        hour = self.hour_drum.get_value()
+        minute = self.minute_drum.get_value()
         execute_time = f"{hour}:{minute}"
+        item = self.item_drum.get_value()
+        location = self.location_drum.get_value()
+        cycle_n = self.cycle_drum.get_index() + 1
 
         schedule_id = (
             self.editing_schedule_id
@@ -786,16 +909,17 @@ class ScheduleEditScreen(BaseScreen):
                 "schedule": {
                     "schedule_id": schedule_id,
                     "cmd_id": "fetch",
-                    "item_id": self.schedule_data["item"],
-                    "position_id": self.schedule_data["location"],
+                    "item_id": item,
+                    "position_id": location,
                     "execute_time": execute_time,
-                    "cycle": int(self.schedule_data["cycle"]),
+                    "cycle": cycle_n,
                     "on_weekends": False,
                 },
             },
         )
 
-        if result["success"]:
+        server_success = result.get("data", {}).get("data", {}).get("success", False)
+        if result["success"] and server_success:
             msg = (
                 "스케줄이 수정되었습니다"
                 if self.editing_schedule_id
@@ -808,7 +932,6 @@ class ScheduleEditScreen(BaseScreen):
             self.app.console.log("스케줄 저장 실패", True)
 
     def cancel_edit(self):
-        """Cancel editing"""
         self.app.show_screen("schedule_list")
 
 
@@ -820,7 +943,6 @@ class HistoryScreen(BaseScreen):
         self.setup_ui()
 
     def setup_ui(self):
-        # Header
         header = tk.Frame(self, bg="#c0c0c0")
         header.pack(fill="x", padx=10, pady=10)
 
@@ -830,10 +952,7 @@ class HistoryScreen(BaseScreen):
         back_btn.pack(side="left")
 
         title = tk.Label(
-            header,
-            text="기록 보관 (History)",
-            font=("Courier New", 16, "bold"),
-            bg="#c0c0c0",
+            header, text="기록 보관", font=("Courier New", 16, "bold"), bg="#c0c0c0"
         )
         title.pack(side="left", padx=20)
 
@@ -842,7 +961,6 @@ class HistoryScreen(BaseScreen):
         )
         refresh_btn.pack(side="right")
 
-        # History content
         content_box = tk.Frame(self, bg="white", relief="solid", bd=3)
         content_box.pack(fill="both", expand=True, padx=20, pady=10)
 
@@ -855,9 +973,7 @@ class HistoryScreen(BaseScreen):
         )
 
     def load_history(self):
-        """Load history from server"""
         result = self.app.send_message("history_req")
-
         self.history_text.delete("1.0", "end")
 
         if result["success"]:
@@ -881,19 +997,16 @@ class PinkyRobotGUI:
         self.root.geometry("900x700")
         self.root.configure(bg="#c0c0c0")
 
-        self.SERVER_URL = "http://192.168.0.48:8000/gui"
+        self.SERVER_URL = "ws://192.168.0.48:8000/gui"
         self.current_user = None
 
-        # Add menu bar
         self.setup_menu()
         self.setup_ui()
 
     def setup_menu(self):
-        """Setup menu bar"""
         menubar = tk.Menu(self.root)
         self.root.config(menu=menubar)
 
-        # Settings menu
         settings_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="설정", menu=settings_menu)
         settings_menu.add_command(
@@ -902,7 +1015,6 @@ class PinkyRobotGUI:
         settings_menu.add_separator()
         settings_menu.add_command(label="종료", command=self.root.quit)
 
-        # Help menu
         help_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="도움말", menu=help_menu)
         help_menu.add_command(
@@ -911,7 +1023,6 @@ class PinkyRobotGUI:
         help_menu.add_command(label="정보", command=self.show_about)
 
     def change_server_url(self):
-        """Change server URL"""
         dialog = tk.Toplevel(self.root)
         dialog.title("서버 주소 변경")
         dialog.geometry("500x150")
@@ -945,7 +1056,6 @@ class PinkyRobotGUI:
         )
 
     def test_server_connection(self):
-        """Test server connection"""
         self.console.log("서버 연결 테스트 중...")
         result = self.send_message("connect")
 
@@ -960,26 +1070,19 @@ class PinkyRobotGUI:
             )
 
     def show_about(self):
-        """Show about dialog"""
         messagebox.showinfo(
             "Pinky Robot Control",
-            "Pinky Robot Control GUI\n\n"
-            "Version: 1.0\n"
-            "Python tkinter 기반\n\n"
+            "Pinky Robot Control GUI\n\nVersion: 1.0\nPython tkinter 기반\n\n"
             f"현재 서버: {self.SERVER_URL}",
         )
 
     def setup_ui(self):
-        """Setup the main UI"""
-        # Main container
         main_frame = tk.Frame(self.root, bg="#c0c0c0")
         main_frame.pack(fill="both", expand=True)
 
-        # Screen container
         self.screen_container = tk.Frame(main_frame, bg="#c0c0c0")
         self.screen_container.pack(fill="both", expand=True)
 
-        # Create all screens
         self.screens = {}
         self.screens["login"] = LoginScreen(self.screen_container, self)
         self.screens["home"] = HomeScreen(self.screen_container, self)
@@ -989,22 +1092,16 @@ class PinkyRobotGUI:
         self.screens["history"] = HistoryScreen(self.screen_container, self)
         self.screens["schedule_edit"] = ScheduleEditScreen(self.screen_container, self)
 
-        # Place all screens
         for screen in self.screens.values():
             screen.place(relx=0, rely=0, relwidth=1, relheight=1)
 
-        # Console at bottom
         self.console = ConsoleWidget(main_frame)
         self.console.pack(fill="x", side="bottom")
 
-        # Show login screen
         self.show_screen("login")
-
-        # Initial log
         self.console.log("System ready")
 
     def send_message(self, msg, data=None):
-        """Send message to server"""
         if data is None:
             data = {}
 
@@ -1012,49 +1109,28 @@ class PinkyRobotGUI:
         self.console.log(f"SEND: {json.dumps(payload, ensure_ascii=False)}")
 
         try:
-            req = request.Request(
-                self.SERVER_URL,
-                data=json.dumps(payload).encode("utf-8"),
-                headers={"Content-Type": "application/json"},
-                method="POST",
-            )
+            ws = websocket.create_connection(self.SERVER_URL, timeout=5)
+            ws.send(json.dumps(payload))
+            response = ws.recv()
+            ws.close()
 
-            with request.urlopen(req, timeout=5) as response:
-                result = json.loads(response.read().decode("utf-8"))
-                self.console.log(f"RECV: {json.dumps(result, ensure_ascii=False)}")
-                return {"success": True, "data": result}
-
-        except error.HTTPError as e:
-            error_msg = f"HTTP Error {e.code}: {e.reason}"
-            self.console.log(f"ERROR: {error_msg}", True)
-            return {"success": False, "error": error_msg}
-
-        except error.URLError as e:
-            if "Connection refused" in str(e.reason):
-                error_msg = f"서버가 실행중이지 않습니다 ({self.SERVER_URL})"
-            elif "timed out" in str(e.reason):
-                error_msg = "서버 응답 시간 초과"
-            else:
-                error_msg = f"연결 오류: {e.reason}"
-            self.console.log(f"ERROR: {error_msg}", True)
-            return {"success": False, "error": error_msg}
+            result = json.loads(response)
+            self.console.log(f"RECV: {json.dumps(result, ensure_ascii=False)}")
+            return {"success": True, "data": result}
 
         except Exception as e:
-            error_msg = f"알 수 없는 오류: {str(e)}"
+            error_msg = f"WebSocket 오류: {str(e)}"
             self.console.log(f"ERROR: {error_msg}", True)
             return {"success": False, "error": error_msg}
 
     def show_screen(self, screen_name):
-        """Show a specific screen"""
         self.screens[screen_name].lift()
 
     def run(self):
-        """Run the application"""
         self.root.mainloop()
 
 
 def main():
-    """Main entry point"""
     app = PinkyRobotGUI()
     app.run()
 
