@@ -1,9 +1,11 @@
 import os
+from typing import List
 
 import httpx
 from dotenv import load_dotenv
 
-from app.database import gui_mapper, schedule_mapper
+from app.database.repositories import gui_repository, schedule_repository
+from app.models.tables import History
 from app.services import pinky_service
 
 load_dotenv()
@@ -11,20 +13,28 @@ load_dotenv()
 JETCOBOT_HOST = os.getenv("JETCOBOT_HOST", "192.168.0.56")
 JETCOBOT_PORT = int(os.getenv("JETCOBOT_PORT", "8001"))
 
+POS_DZ = "drop zone"
+POS_CHARGER = "charger"
+
+ANGLE_SHELVE_SIDE = "shelve side"
+ANGLE_PINKY_SIDE = "pinky side"
+ANGLE_DROP = "drop"
+ANGLE_HOME = "home"
+ANGLE_TRASH_SIDE = "trash side"
+ANGLE_TRASH_GENERAL = "trash general"
+
 
 def login(data):
     user_id = data["id"]
     user_pw = data["pw"]
 
-    user_name = gui_mapper.login_user(user_id, user_pw)
+    user_name = gui_repository.login_user(user_id, user_pw)
 
-    if user_name is not None:
-        return user_name
-    return False
+    return {"user_name": user_name}
 
 
 def fetch_info():
-    items, positions = gui_mapper.fetch_info()
+    items, positions = gui_repository.fetch_info()
     print(f"items: {items}")
     print(f"positions: {positions}")
 
@@ -34,52 +44,67 @@ def fetch_info():
     return {
         "items": [
             {
-                "item_id": item.item_id,
-                "item_name": item.item_name,
-                "amount": item.amount,
-                "frequency": item.frequency,
+                "item_id": i.item_id,
+                "item_name": i.item_name,
+                "amount": i.amount,
+                "frequency": i.frequency,
             }
-            for item in items
+            for i in items
         ],
         "positions": [
             {
-                "position_id": pos.position_id,
-                "position_name": pos.position_name,
-                "x": pos.x,
-                "y": pos.y,
-                "theta": pos.theta,
+                "position_id": p.position_id,
+                "position_name": p.position_name,
+                "x": p.x,
+                "y": p.y,
+                "w": p.w,
             }
-            for pos in positions
+            for p in positions
         ],
     }
 
 
-DEFAULT_POS = [5.36, 121.99, -140.09, -24.69, 6.41, -126.82]
-READY_POS = [50.2, 116.0, 311.6, -160.96, -5.67, 48.23]
-PICK_POS = [33.2, 241.5, 114.7, -168.73, 7.76, 45.65]
-PLACE_POS = [265.2, 45.4, 42.8, -174.55, 14.04, -35.09]
-
-
-def create_posture(angles, gap=50):
-    """Convert position array to Posture format for jetcobot/arm"""
+def create_angles(angle, gap):
     return {
-        "j1": angles[0],
-        "j2": angles[1],
-        "j3": angles[2],
-        "j4": angles[3],
-        "j5": angles[4],
-        "j6": angles[5],
+        "j1": angle.j1,
+        "j2": angle.j2,
+        "j3": angle.j3,
+        "j4": angle.j4,
+        "j5": angle.j5,
+        "j6": angle.j6,
         "gap": gap,
     }
 
 
-def send_postures_to_jetcobot(postures) -> bool:
-    """Send list of postures to jetcobot arm service"""
+def drop_sequence():
+    drop_angle = gui_repository.sel_angle_by_angle_name(ANGLE_DROP)
+    home_angle = gui_repository.sel_angle_by_angle_name(ANGLE_HOME)
+
+    return [
+        create_angles(drop_angle, gap=100),
+        create_angles(home_angle, gap=100),
+    ]
+
+
+def pick_sequence(item_id):
+    shelve_side = gui_repository.sel_angle_by_angle_name(ANGLE_SHELVE_SIDE)
+    pinky_side = gui_repository.sel_angle_by_angle_name(ANGLE_PINKY_SIDE)
+    pick_angle = gui_repository.sel_angle_by_item_id(item_id)
+
+    return [
+        create_angles(shelve_side, gap=100),
+        create_angles(pick_angle, gap=0),
+        create_angles(shelve_side, gap=0),
+        create_angles(pinky_side, gap=0),
+    ]
+
+
+def cmd_arm(sequence) -> bool:
     jetcobot_url = f"http://{JETCOBOT_HOST}:{JETCOBOT_PORT}/pose"
 
     try:
         with httpx.Client(timeout=60.0) as client:
-            response = client.post(jetcobot_url, json=postures)
+            response = client.post(jetcobot_url, json=sequence)
             response.raise_for_status()
             result = response.json()
             is_success: bool = result["success"]
@@ -91,92 +116,144 @@ def send_postures_to_jetcobot(postures) -> bool:
 
 
 def fetch_cmd(data):
-    msg = "fetch_cmd"
-    item = data["item"]
-    position = data["position"]
+    item_id = data.get("item_id")
+    position_id = data.get("position_id")
 
-    print("gui_service.py")
-    print(f"item: {item}")
-    print(f"position: {position}")
+    dz_pos = gui_repository.sel_pos_by_name(POS_DZ)
+    pinky_to_dz = pinky_service.cmd_pinky(dz_pos)
+    if not pinky_to_dz:
+        print("Pinky failed to reach DZ")
 
-    # Create pick sequence for fetching item
-    pick_sequence = [
-        create_posture(DEFAULT_POS, gap=100),
-        create_posture(READY_POS, gap=100),
-        create_posture(PICK_POS, gap=100),
-        create_posture(PICK_POS, gap=50),
-        create_posture(READY_POS, gap=50),
-    ]
+    pick_seq = pick_sequence(item_id)
+    arm_pickup_res = cmd_arm(pick_seq)
+    if not arm_pickup_res:
+        print(f"Arm failed to pick up {item_id}")
 
-    # Send postures to jetcobot
-    is_success: bool = send_postures_to_jetcobot(pick_sequence)
+    if pinky_to_dz and arm_pickup_res is False:
+        return "foobar"
 
-    if is_success is False:
-        return {"msg": msg, "data": {"success": is_success}}
+    drop_seq = drop_sequence()
+    arm_drop_res = cmd_arm(drop_seq)
+    if not arm_drop_res:
+        print("Arm failed to drop item to pinky")
 
-    # TODO: first send pinky to DZ
+    target_pos = gui_repository.sel_position_by_id(position_id)
+    if target_pos is None:
+        print(f"{position_id} not found")
+    pinky_to_target_res = pinky_service.cmd_pinky(target_pos)
+    if not pinky_to_target_res:
+        print("Pinky failed to reach target position")
 
-    # TODO: send position to pinky
-    pinky_res = pinky_service.send_position(position)
-    print(pinky_res)
+    return {"success": True}
 
-    return {"msg": msg, "data": {"success": True}}
+
+def fetch_confirm():
+    charger_pos = gui_repository.sel_pos_by_name(POS_CHARGER)
+    pinky_to_charger = pinky_service.cmd_pinky(charger_pos)
+    if not pinky_to_charger:
+        return {"success": False}
+    return {"success": True}
 
 
 def take_info():
-    positions = gui_mapper.take_info()
+    positions = gui_repository.take_info()
     if positions is None:
         return []
+    return {
+        "position": [
+            {
+                "position_id": p.position_id,
+                "position_name": p.position_name,
+                "x": p.x,
+                "y": p.y,
+                "w": p.w,
+            }
+            for p in positions
+        ]
+    }
+
+
+def take_cmd(data):
+    position_id = data.get("position_id")
+    target_pos = gui_repository.sel_position_by_id(position_id)
+    pinky_to_target = pinky_service.cmd_pinky(target_pos)
+    if not pinky_to_target:
+        print("Pinky failed to reach target")
+        return {"success": False}
+    return {"success": True}
+
+
+def trash_sequence():
+    pinky_side = gui_repository.sel_angle_by_angle_name(ANGLE_PINKY_SIDE)
+    drop_angle = gui_repository.sel_angle_by_angle_name(ANGLE_DROP)
+    trash_side = gui_repository.sel_angle_by_angle_name(ANGLE_TRASH_SIDE)
+    trash_general = gui_repository.sel_angle_by_angle_name(ANGLE_TRASH_GENERAL)
+
     return [
-        {
-            "position_id": p.position_id,
-            "position_name": p.position_name,
-            "x": p.x,
-            "y": p.y,
-            "theta": p.theta,
-        }
-        for p in positions
+        create_angles(pinky_side, 100),
+        create_angles(drop_angle, 0),
+        create_angles(pinky_side, 0),
+        create_angles(trash_side, 0),
+        create_angles(trash_general, 100),
     ]
 
 
-# TODO: implement take_cmd logic
-def take_cmd():
-    return "Hello, from take_cmd()"
+def take_confirm():
+    dz_pos = gui_repository.sel_pos_by_name(POS_DZ)
+    pinky_to_dz = pinky_service.cmd_pinky(dz_pos)
+    if not pinky_to_dz:
+        print("Pinky failed to reach DZ")
+        return {"success": False}
+
+    # TODO: trash dynamically
+    trash_seq = trash_sequence()
+    arm_trash_res = cmd_arm(trash_seq)
+    if not arm_trash_res:
+        print("Arm failed to trash")
+        return {"success": False}
+
+    charger_pos = gui_repository.sel_pos_by_name(POS_CHARGER)
+    pinky_to_charger = pinky_service.cmd_pinky(charger_pos)
+    if not pinky_to_charger:
+        print("pinky failed to go to charger")
+        return {"success": False}
+    return {"success": True}
 
 
 def schedule_info():
-    schedules = schedule_mapper.select_all_schedules()
+    schedules = schedule_repository.select_all_schedules()
 
     if not schedules:
         return []
 
-    return [
-        {
-            "schedule_id": s.schedule_id,
-            "cmd_id": s.cmd_id,
-            "item_id": s.item_id,
-            "position_id": s.position_id,
-            "execute_time": s.execute_time.strftime("%H:%M:%S"),
-            "cycle": s.cycle,
-            "on_weekends": s.on_weekends,
-        }
-        for s in schedules
-    ]
+    return {
+        "schedules": [
+            {
+                "schedule_id": s.schedule_id,
+                "cmd_id": s.cmd_id,
+                "item_id": s.item_id,
+                "position_id": s.position_id,
+                "execute_time": s.execute_time.strftime("%H:%M:%S"),
+                "cycle": s.cycle,
+                "on_weekends": s.on_weekends,
+            }
+            for s in schedules
+        ]
+    }
 
 
 def schedule_edit(data):
-    msg = "schedule_edit"
     is_success = False
     result = None
 
     action = data["action"]
     match action:
         case "add":
-            result = schedule_mapper.insert_schedule(data)
+            result = schedule_repository.insert_schedule(data)
         case "edit":
-            result = schedule_mapper.update_schedule(data)
+            result = schedule_repository.update_schedule(data)
         case "delete":
-            result = schedule_mapper.delete_schedule(data)
+            result = schedule_repository.delete_schedule(data)
         case _:
             pass
 
@@ -184,6 +261,28 @@ def schedule_edit(data):
         is_success = True
 
     return {
-        "msg": msg,
         "success": is_success,
+    }
+
+
+def history_info():
+    histories: List[History] = gui_repository.history_info()
+
+    return {
+        "histories": [
+            {
+                "history_id": h.history_id,
+                "user_id": h.user_id,
+                "item_id": h.item_id,
+                "robot_1": h.robot_1,
+                "robot_2": h.robot_2,
+                "position_id": h.position_id,
+                "schedule_id": h.schedule_id,
+                "detection_type": h.detection_type,
+                "time_start": h.time_start,
+                "time_end": h.time_end,
+                "is_successful": h.is_successful,
+            }
+        ]
+        for h in histories
     }

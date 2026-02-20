@@ -53,7 +53,7 @@ class NavigationScreen(QWidget):
 
     def _make_header(self) -> QHBoxLayout:
         header = QHBoxLayout()
-        btn = QPushButton("⬅️ 홈으로")
+        btn = QPushButton("뒤로가기")
         btn.setFixedSize(100, 35)
         btn.setStyleSheet(BACK_BUTTON_STYLE)
         btn.clicked.connect(self._on_back)
@@ -99,7 +99,7 @@ class NavigationScreen(QWidget):
         # Room-navigation row
         room_row = QHBoxLayout()
         for room in _PRESET_LOCATIONS:
-            btn = QPushButton(f"📍 {room}")
+            btn = QPushButton(f"{room}")
             btn.setStyleSheet(action_button_style("blue"))
             btn.clicked.connect(lambda checked, r=room: self._send_move(r))
             room_row.addWidget(btn)
@@ -140,7 +140,7 @@ class NavigationScreen(QWidget):
         try:
             resp = client.move(destination)
             if resp.status_code == 200:
-                QMessageBox.information(self, "성공", f"{destination}으로 이동 시작!")
+                QMessageBox.information(self, "성공", f"{destination}으로 이동")
             else:
                 QMessageBox.warning(self, "오류", "서버 응답 오류")
         except Exception as exc:
@@ -173,7 +173,7 @@ class NavigationScreen(QWidget):
             resp = client.bring_item(item, room)
             if resp.status_code == 200:
                 QMessageBox.information(
-                    self, "작업 시작", f"{item}를 {room}으로 가져옵니다!"
+                    self, "작업 시작", f"{item}를 {room}으로 가져옵니다"
                 )
         except Exception as exc:
             QMessageBox.critical(self, "오류", f"서버 연결 실패: {exc}")
@@ -197,9 +197,7 @@ class NavigationScreen(QWidget):
         try:
             resp = client.put_item(room)
             if resp.status_code == 200:
-                QMessageBox.information(
-                    self, "작업 시작", "Pick Up Zone으로 이동합니다!"
-                )
+                QMessageBox.information(self, "작업 시작", "Pick Up Zone으로 이동")
         except Exception as exc:
             QMessageBox.critical(self, "오류", f"서버 연결 실패: {exc}")
 

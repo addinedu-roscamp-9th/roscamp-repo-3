@@ -60,21 +60,21 @@ class Position(Base):
     position_name = Column(String(30), nullable=False)
     x = Column(Float, nullable=False)
     y = Column(Float, nullable=False)
-    theta = Column(Float, nullable=False)
+    w = Column(Float, nullable=False)
 
 
-class Posture(Base):
-    __tablename__ = "postures"
+class Angle(Base):
+    __tablename__ = "angles"
 
-    pos_id = Column(String(11), primary_key=True)
-    pos_name = Column(String(30), nullable=False)
+    angle_id = Column(String(11), primary_key=True)
+    item_id = Column(String(11), nullable=True)
+    angle_name = Column(String(30), nullable=False)
     j1 = Column(Float, nullable=False)
     j2 = Column(Float, nullable=False)
     j3 = Column(Float, nullable=False)
     j4 = Column(Float, nullable=False)
     j5 = Column(Float, nullable=False)
     j6 = Column(Float, nullable=False)
-    gap = Column(Integer, nullable=False)
 
 
 class Schedule(Base):

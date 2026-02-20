@@ -5,12 +5,13 @@ from PyQt5.QtWidgets import QStackedWidget, QVBoxLayout, QWidget
 
 from app import client
 from app.screens.home import HomeScreen
+from app.screens.login import LoginScreen
 from app.screens.navigation import NavigationScreen
 from app.screens.schedule import ScheduleScreen
 
 
 class MainWindow(QWidget):
-    """Top-level widget.  Wires the three screens together and runs the
+    """Top-level widget.  Wires the screens together and runs the
     battery-status poller."""
 
     _BATTERY_POLL_MS = 2000
@@ -24,19 +25,28 @@ class MainWindow(QWidget):
         # --- screens ------------------------------------------------------
         self._stack = QStackedWidget()
 
-        self._navigation = NavigationScreen(
-            on_back=lambda: self._stack.setCurrentIndex(0)
+        # Login screen (index 0)
+        self._login = LoginScreen(
+            on_login_success=lambda: self._stack.setCurrentIndex(1)
         )
-        self._schedule = ScheduleScreen(on_back=lambda: self._stack.setCurrentIndex(0))
+        self._stack.addWidget(self._login)
 
-        self._stack.addWidget(
-            HomeScreen(
-                on_pinky=lambda: self._stack.setCurrentIndex(1),
-                on_schedule=lambda: self._stack.setCurrentIndex(2),
-            )
-        )  # index 0
-        self._stack.addWidget(self._navigation)  # index 1
-        self._stack.addWidget(self._schedule)  # index 2
+        # Home screen (index 1)
+        self._home = HomeScreen(
+            on_pinky=lambda: self._stack.setCurrentIndex(2),
+            on_schedule=lambda: self._stack.setCurrentIndex(3),
+        )
+        self._stack.addWidget(self._home)
+
+        # Navigation screen (index 2)
+        self._navigation = NavigationScreen(
+            on_back=lambda: self._stack.setCurrentIndex(1)
+        )
+        self._stack.addWidget(self._navigation)
+
+        # Schedule screen (index 3)
+        self._schedule = ScheduleScreen(on_back=lambda: self._stack.setCurrentIndex(1))
+        self._stack.addWidget(self._schedule)
 
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)

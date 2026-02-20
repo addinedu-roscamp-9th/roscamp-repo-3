@@ -1,6 +1,6 @@
 import time
 
-from pymycobot.mycobot280 import MyCobot280
+from pymycobot.mycobot import MyCobot as MyCobot280
 
 from app.model.posture import Posture
 

@@ -1,0 +1,9 @@
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
+include = ["main.py", "app"]
+exclude = ["**/__pycache__", ".venv"]
+reportMissingImports = true
+reportMissingTypeStubs = false
+pythonVersion = "3.12"
+typeCheckingMode = "basic"

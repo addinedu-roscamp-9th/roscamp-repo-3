@@ -8,25 +8,22 @@ set -euo pipefail
 
 pip_packages=(
   "cryptography"
+  "dotenv"
   "fastapi"
   "httpx"
   "jinja2"
   "multipart"
-  "dotenv"
   "numpy"
   "opencv-python"
   "pymysql"
   "pyyaml"
+  "rclpy"
   "setuptools"
   "sqlalchemy"
   "typeguard"
   "uvicorn"
   "websockets"
   "requests"
-)
-
-apt_packages=(
-  "ros-jazzy-nav2-msgs"
 )
 
 # create venv if not already created
@@ -42,6 +39,3 @@ pip install -U pip
 
 # install required dependencies with pip
 pip install "${pip_packages[@]}"
-
-# install required dependencies with apt
-sudo apt install -y "${apt_packages[@]}"

@@ -8,62 +8,60 @@ router = APIRouter()
 
 # ws://192.168.0.56:8000/gui
 @router.websocket("")
-async def jetcobot_connection_test(websocket: WebSocket):
+async def gui_ws(websocket: WebSocket):
     await websocket.accept()
     try:
         while True:
             msg = await websocket.receive_json()
-
             result = gui_controller(msg)
-
             await websocket.send_json(result)
     except WebSocketDisconnect:
-        print("Client disconnected normally")
+        print("Client disconnected")
     except ValidationError as e:
-        print(f"Invalid data format from client: {e}")
-    except ValueError as e:
-        print(f"Service error: {e}")
+        print(e)
 
 
-def gui_controller(msg):
-    msg = msg["msg"]
-    data = msg["data"]
+def gui_controller(req):
+    msg = req.get("msg")
+    data = req.get("data")
+    res = None
 
     match msg:
         case "connect":
-            return True
+            res = {"success": True}
 
         case "login":
-            user_name = gui_service.login(data)
-            print(user_name)
-            return user_name
+            res = gui_service.login(data)
 
         case "fetch_req":
-            what_where = gui_service.fetch_info()
-            return what_where
+            res = gui_service.fetch_info()
 
         case "fetch_cmd":
-            result = gui_service.fetch_cmd(data)
-            return result
+            res = gui_service.fetch_cmd(data)
+
+        case "fetch_confirm":
+            res = gui_service.fetch_confirm()
 
         case "take_req":
-            result = gui_service.take_info()
-            return result
+            res = gui_service.take_info()
 
         case "take_cmd":
-            result = gui_service.take_cmd()
-            return result
+            res = gui_service.take_cmd(data)
+
+        case "take_confirm":
+            res = gui_service.take_confirm()
 
         case "schedule_req":
-            result = gui_service.schedule_info()
-            return result
+            res = gui_service.schedule_info()
 
         case "schedule_edit":
-            result = gui_service.schedule_edit(data)
-            return result
+            res = gui_service.schedule_edit(data)
 
         case "history_req":
-            pass
+            res = gui_service.history_info()
 
         case _:
-            return {"status": "error", "error": f"Unknown msg_type: {msg}"}
+            msg = "error"
+            res = "unknown message"
+
+    return {"msg": msg, "data": res}
