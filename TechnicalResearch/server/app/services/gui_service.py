@@ -15,6 +15,7 @@ JETCOBOT_PORT = int(os.getenv("JETCOBOT_PORT", "8001"))
 
 POS_DZ = "drop zone"
 POS_CHARGER = "charger"
+POS_CHECK_POINT = "check point"
 
 ANGLE_SHELVE_SIDE = "shelve side"
 ANGLE_PINKY_SIDE = "pinky side"
@@ -99,6 +100,16 @@ def pick_sequence(item_id):
     ]
 
 
+NAV_TIMEOUT = 60  # seconds per navigation leg
+
+
+def nav_pinky(pos) -> bool:
+    """Send a navigation goal and block until the robot reaches it."""
+    if not pinky_service.cmd_pinky(pos):
+        return False
+    return pinky_service.wait_pinky(NAV_TIMEOUT)
+
+
 def cmd_arm(sequence) -> bool:
     jetcobot_url = f"http://{JETCOBOT_HOST}:{JETCOBOT_PORT}/pose"
 
@@ -120,37 +131,40 @@ def fetch_cmd(data):
     position_id = data.get("position_id")
 
     dz_pos = gui_repository.sel_pos_by_name(POS_DZ)
-    pinky_to_dz = pinky_service.cmd_pinky(dz_pos)
-    if not pinky_to_dz:
+    if not nav_pinky(dz_pos):
         print("Pinky failed to reach DZ")
+        return {"success": False}
 
     pick_seq = pick_sequence(item_id)
-    arm_pickup_res = cmd_arm(pick_seq)
-    if not arm_pickup_res:
+    if not cmd_arm(pick_seq):
         print(f"Arm failed to pick up {item_id}")
-
-    if pinky_to_dz and arm_pickup_res is False:
-        return "foobar"
+        return {"success": False}
 
     drop_seq = drop_sequence()
-    arm_drop_res = cmd_arm(drop_seq)
-    if not arm_drop_res:
+    if not cmd_arm(drop_seq):
         print("Arm failed to drop item to pinky")
+        return {"success": False}
+
+    # TEST: go through checkpoint only when going to "living room"
+    if position_id == "p2602150003":
+        check_point = gui_repository.sel_pos_by_name(POS_CHECK_POINT)
+        check_point_res = nav_pinky(check_point)
+        print(f"check_point_res: {check_point_res}")
 
     target_pos = gui_repository.sel_position_by_id(position_id)
     if target_pos is None:
         print(f"{position_id} not found")
-    pinky_to_target_res = pinky_service.cmd_pinky(target_pos)
-    if not pinky_to_target_res:
+        return {"success": False}
+    if not nav_pinky(target_pos):
         print("Pinky failed to reach target position")
+        return {"success": False}
 
     return {"success": True}
 
 
 def fetch_confirm():
     charger_pos = gui_repository.sel_pos_by_name(POS_CHARGER)
-    pinky_to_charger = pinky_service.cmd_pinky(charger_pos)
-    if not pinky_to_charger:
+    if not nav_pinky(charger_pos):
         return {"success": False}
     return {"success": True}
 
@@ -176,8 +190,7 @@ def take_info():
 def take_cmd(data):
     position_id = data.get("position_id")
     target_pos = gui_repository.sel_position_by_id(position_id)
-    pinky_to_target = pinky_service.cmd_pinky(target_pos)
-    if not pinky_to_target:
+    if not nav_pinky(target_pos):
         print("Pinky failed to reach target")
         return {"success": False}
     return {"success": True}
@@ -202,21 +215,18 @@ def trash_sequence():
 
 def take_confirm():
     dz_pos = gui_repository.sel_pos_by_name(POS_DZ)
-    pinky_to_dz = pinky_service.cmd_pinky(dz_pos)
-    if not pinky_to_dz:
+    if not nav_pinky(dz_pos):
         print("Pinky failed to reach DZ")
         return {"success": False}
 
     # TODO: trash dynamically
     trash_seq = trash_sequence()
-    arm_trash_res = cmd_arm(trash_seq)
-    if not arm_trash_res:
+    if not cmd_arm(trash_seq):
         print("Arm failed to trash")
         return {"success": False}
 
     charger_pos = gui_repository.sel_pos_by_name(POS_CHARGER)
-    pinky_to_charger = pinky_service.cmd_pinky(charger_pos)
-    if not pinky_to_charger:
+    if not nav_pinky(charger_pos):
         print("pinky failed to go to charger")
         return {"success": False}
 
