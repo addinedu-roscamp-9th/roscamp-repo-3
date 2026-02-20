@@ -5,7 +5,7 @@ import sys
 import websockets
 
 
-async def test_fetch_confirm():
+async def fetch_confirm():
     uri = "ws://localhost:8000/gui"
 
     try:
@@ -46,5 +46,5 @@ async def test_fetch_confirm():
 
 
 if __name__ == "__main__":
-    success = asyncio.run(test_fetch_confirm())
+    success = asyncio.run(fetch_confirm())
     sys.exit(0 if success else 1)

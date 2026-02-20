@@ -5,14 +5,15 @@ import sys
 import websockets
 
 
-async def test_take_cmd(position_id):
+async def fetch_req(item_id, position_id):
     uri = "ws://localhost:8000/gui"
 
     try:
         async with websockets.connect(uri) as websocket:
             message = {
-                "msg": "take_cmd",
+                "msg": "fetch_cmd",
                 "data": {
+                    "item_id": item_id,
                     "position_id": position_id,
                 },
             }
@@ -30,7 +31,7 @@ async def test_take_cmd(position_id):
                 print("\n❌ Error:", response_data.get("data"))
                 return False
 
-            print("\nTake command sent")
+            print("\n✓ Fetch command sent successfully!")
             return True
 
     except websockets.exceptions.WebSocketException as e:
@@ -46,5 +47,5 @@ async def test_take_cmd(position_id):
 
 
 if __name__ == "__main__":
-    success = asyncio.run(test_take_cmd("p2602150002"))
+    success = asyncio.run(fetch_req("i2602150001", "p2602150003"))
     sys.exit(0 if success else 1)
