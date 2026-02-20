@@ -13,22 +13,38 @@ def select_all_schedules():
 def insert_schedule(data):
     db = SessionLocal()
     try:
+        from datetime import datetime
+        import random
+
+        execute_time_str = data.get("execute_time")
+        execute_time = datetime.strptime(execute_time_str, "%H:%M:%S").time()
+
+        # schedule_id 자동 생성
+        schedule_id = f"s{random.randint(1000000000, 9999999999)}"
+
         new_schedule = Schedule(
-            schedule_id=data.get("schedule_id"),
+            schedule_id=schedule_id,
             cmd_id=data.get("cmd_id"),
             item_id=data.get("item_id"),
             position_id=data.get("position_id"),
-            execute_time=data.get("execute_time"),
+            execute_time=execute_time,
             cycle=data.get("cycle", 1),
             on_weekends=data.get("on_weekends", False),
         )
+
         db.add(new_schedule)
         db.commit()
         db.refresh(new_schedule)
+
+        print("INSERT SUCCESS:", new_schedule.schedule_id)
+
         return new_schedule
+
     except Exception as e:
         db.rollback()
-        raise e
+        print("INSERT ERROR:", e)
+        return None
+
     finally:
         db.close()
 
