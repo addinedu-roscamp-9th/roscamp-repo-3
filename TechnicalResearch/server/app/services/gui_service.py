@@ -146,7 +146,7 @@ def fetch_cmd(data):
         return {"success": False}
 
     # TEST: go through checkpoint only when going to "living room"
-    if position_id == "p2602150003":
+    if str(position_id) == "p2602150003":
         check_point = gui_repository.sel_pos_by_name(POS_CHECK_POINT)
         check_point_res = nav_pinky(check_point)
         print(f"check_point_res: {check_point_res}")
