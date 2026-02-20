@@ -236,11 +236,10 @@ def take_confirm():
 def schedule_info():
     schedules = schedule_repository.select_all_schedules()
 
-    if not schedules:
-        return []
+    schedule_list = []
 
-    return {
-        "schedules": [
+    for s in schedules:
+        schedule_list.append(
             {
                 "schedule_id": s.schedule_id,
                 "cmd_id": s.cmd_id,
@@ -250,9 +249,9 @@ def schedule_info():
                 "cycle": s.cycle,
                 "on_weekends": s.on_weekends,
             }
-            for s in schedules
-        ]
-    }
+        )
+
+    return {"schedules": schedule_list}
 
 
 def schedule_edit(data):
