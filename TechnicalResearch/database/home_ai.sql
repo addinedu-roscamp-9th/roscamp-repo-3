@@ -106,9 +106,10 @@ create table positions (
     );
 
 insert into positions values ('p2602150001', 'charger', 0.0, 0.0, 0.0);
-insert into positions values ('p2602150002', 'drop zone', 0.2269, 0.2037, 0.7076);
-insert into positions values ('p2602150003', 'living room', 4.0, 5.0, 6.0);
-insert into positions values ('p2602150004', 'bed room', 7.0, 8.0, 9.0);
+insert into positions values ('p2602150002', 'drop zone', 0.2213, 0.0043, 0.0);
+insert into positions values ('p2602150003', 'living room', 0.5041, 1.3010, 0.0);
+insert into positions values ('p2602150004', 'bed room', 0.0037, 1.13495, 0.0);
+insert into positions values ('p2602150005', 'check point', 0.3073, 0.0, 0.0);
 
 create table schedules (
         schedule_id  varchar(11) primary key,
