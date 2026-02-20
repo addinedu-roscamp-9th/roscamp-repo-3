@@ -23,7 +23,7 @@ class PinkyNavigationClient(Node):
         self._result_future = None
 
         # Topic publisher for /pinky/target
-        self.target_publisher = self.create_publisher(PorterTarget, "/pinky/target", 10)
+        self.target_publisher = self.create_publisher(PorterTarget, "/porter_target", 10)
 
         self.get_logger().info("Pinky navigation client initialized")
 
