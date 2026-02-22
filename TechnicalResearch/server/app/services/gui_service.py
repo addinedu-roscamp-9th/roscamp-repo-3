@@ -56,9 +56,6 @@ def fetch_info():
             {
                 "position_id": p.position_id,
                 "position_name": p.position_name,
-                "x": p.x,
-                "y": p.y,
-                "w": p.w,
             }
             for p in positions
         ],
@@ -178,9 +175,6 @@ def take_info():
             {
                 "position_id": p.position_id,
                 "position_name": p.position_name,
-                "x": p.x,
-                "y": p.y,
-                "w": p.w,
             }
             for p in positions
         ]
