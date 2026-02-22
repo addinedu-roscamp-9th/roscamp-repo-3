@@ -9,6 +9,7 @@ setup(
     data_files=[
         ("share/ament_index/resource_index/packages", ["resource/" + PKG_NAME]),
         ("share/" + PKG_NAME, ["package.xml"]),
+        ("share/" + PKG_NAME + "/launch", ["launch/pinky.launch.py"]),
     ],
     install_requires=["setuptools"],
     zip_safe=True,
@@ -22,6 +23,9 @@ setup(
         ],
     },
     entry_points={
-        "console_scripts": ["vel_sub = debugcrew.vel_sub:main"],
+        "console_scripts": [
+            "vel_sub = debugcrew.vel_sub:main",
+            "pid_node = debugcrew.pid_node:main",
+        ],
     },
 )

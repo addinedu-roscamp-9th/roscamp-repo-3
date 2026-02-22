@@ -14,13 +14,10 @@ Transport pinky
 ## Run
 
 ```sh
-ros2 run debugcrew vel_sub
-```
-
-Publis topic
-
-```sh
-ros2 topic pub /porter_target debugcrew_msgs/msg/PorterTarget "{x: 5.0, y: 3.0, w: 0.0}"
+cd ~/dev/roscamp-repo-3/porter
+colcon build --packages-select debugcrew_msgs debugcrew
+source install/setup.bash
+ros2 launch debugcrew pinky.launch.py
 ```
 
 ---
@@ -34,16 +31,26 @@ ros2 topic pub /porter_target debugcrew_msgs/msg/PorterTarget "{x: 5.0, y: 3.0, 
 
 ## Nodes
 
-- vel_sub
+- vel_sub — receives `/porter_target`, drives Nav2, hands off to PID at < 0.30 m
+- pid_node — fine PID positioning, publishes `/porter_status` on arrival
 
 ---
 
 ## Msgs
 
-- PorterTarget.msg
+### PorterTarget.msg
 
 ```
 float32 x
 float32 y
-float32 w
+float32 yaw
+```
+
+### PorterStatus.msg
+
+```
+string status
+float32 x
+float32 y
+float32 yaw
 ```
