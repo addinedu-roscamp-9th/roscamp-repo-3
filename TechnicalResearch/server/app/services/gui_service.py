@@ -62,7 +62,7 @@ def fetch_info():
     }
 
 
-def create_angles(angle, gap):
+def _create_angles(angle, gap):
     return {
         "j1": angle.j1,
         "j2": angle.j2,
@@ -74,26 +74,26 @@ def create_angles(angle, gap):
     }
 
 
-def drop_sequence():
+def _drop_sequence():
     drop_angle = gui_repository.sel_angle_by_angle_name(ANGLE_DROP)
     home_angle = gui_repository.sel_angle_by_angle_name(ANGLE_HOME)
 
     return [
-        create_angles(drop_angle, gap=100),
-        create_angles(home_angle, gap=100),
+        _create_angles(drop_angle, gap=100),
+        _create_angles(home_angle, gap=100),
     ]
 
 
-def pick_sequence(item_id):
+def _pick_sequence(item_id):
     shelve_side = gui_repository.sel_angle_by_angle_name(ANGLE_SHELVE_SIDE)
     pinky_side = gui_repository.sel_angle_by_angle_name(ANGLE_PINKY_SIDE)
     pick_angle = gui_repository.sel_angle_by_item_id(item_id)
 
     return [
-        create_angles(shelve_side, gap=100),
-        create_angles(pick_angle, gap=0),
-        create_angles(shelve_side, gap=0),
-        create_angles(pinky_side, gap=0),
+        _create_angles(shelve_side, gap=100),
+        _create_angles(pick_angle, gap=0),
+        _create_angles(shelve_side, gap=0),
+        _create_angles(pinky_side, gap=0),
     ]
 
 
@@ -132,12 +132,12 @@ def fetch_cmd(data):
         print("Pinky failed to reach DZ")
         return {"success": False}
 
-    pick_seq = pick_sequence(item_id)
+    pick_seq = _pick_sequence(item_id)
     if not cmd_arm(pick_seq):
         print(f"Arm failed to pick up {item_id}")
         return {"success": False}
 
-    drop_seq = drop_sequence()
+    drop_seq = _drop_sequence()
     if not cmd_arm(drop_seq):
         print("Arm failed to drop item to pinky")
         return {"success": False}
@@ -190,7 +190,7 @@ def take_cmd(data):
     return {"success": True}
 
 
-def trash_sequence():
+def _trash_sequence():
     pinky_side = gui_repository.sel_angle_by_angle_name(ANGLE_PINKY_SIDE)
     drop_angle = gui_repository.sel_angle_by_angle_name(ANGLE_DROP)
     trash_side = gui_repository.sel_angle_by_angle_name(ANGLE_TRASH_SIDE)
@@ -198,12 +198,12 @@ def trash_sequence():
     home_angle = gui_repository.sel_angle_by_angle_name(ANGLE_HOME)
 
     return [
-        create_angles(pinky_side, 100),
-        create_angles(drop_angle, 0),
-        create_angles(pinky_side, 0),
-        create_angles(trash_side, 0),
-        create_angles(trash_general, 100),
-        create_angles(home_angle, 100),
+        _create_angles(pinky_side, 100),
+        _create_angles(drop_angle, 0),
+        _create_angles(pinky_side, 0),
+        _create_angles(trash_side, 0),
+        _create_angles(trash_general, 100),
+        _create_angles(home_angle, 100),
     ]
 
 
@@ -214,7 +214,7 @@ def take_confirm():
         return {"success": False}
 
     # TODO: trash dynamically
-    trash_seq = trash_sequence()
+    trash_seq = _trash_sequence()
     if not cmd_arm(trash_seq):
         print("Arm failed to trash")
         return {"success": False}
