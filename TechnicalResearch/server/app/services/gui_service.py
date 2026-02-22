@@ -102,9 +102,7 @@ NAV_TIMEOUT = 60  # seconds per navigation leg
 
 def nav_pinky(pos) -> bool:
     """Send a navigation goal and block until the robot reaches it."""
-    if not pinky_service.cmd_pinky(pos):
-        return False
-    return pinky_service.wait_pinky(NAV_TIMEOUT)
+    return pinky_service.nav_pinky(pos, timeout=NAV_TIMEOUT)
 
 
 def cmd_arm(sequence) -> bool:

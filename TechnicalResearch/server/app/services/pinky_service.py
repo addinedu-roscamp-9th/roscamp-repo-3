@@ -1,183 +1,173 @@
-import math
+"""ROS2 interface service for the Pinky robot.
+
+Flow
+----
+1. Server calls ``send_pinky_target(position)``
+   → publishes a ``PorterTarget`` on ``/porter_target``
+   → ``vel_sub`` node receives it and sends a Nav2 goal
+   → when Nav2 gets close enough, it cancels and publishes ``/pid_activate``
+   → ``pid_node`` takes over, does fine PID positioning
+   → ``pid_node`` publishes ``PorterStatus(status="arrived")`` on ``/porter_status``
+
+2. Server calls ``wait_pinky(timeout)``
+   → blocks (spins the ROS node) until ``/porter_status`` is received or timeout
+
+3. ``nav_pinky(position, timeout)`` is a convenience wrapper for both steps.
+"""
+
 import threading
 
 import rclpy
-from action_msgs.msg import GoalStatus
-from debugcrew_msgs.msg import PorterTarget
-from nav2_msgs.action import NavigateToPose
-from rclpy.action import ActionClient
+from debugcrew_msgs.msg import PorterStatus, PorterTarget
 from rclpy.node import Node
 
-# Global ROS2 node instance
-_ros_node = None
+# ---------------------------------------------------------------------------
+# Global singleton
+# ---------------------------------------------------------------------------
+_ros_node: "PinkyClient | None" = None
 _ros_lock = threading.Lock()
 
 
-class PinkyNavigationClient(Node):
-    """ROS2 node for sending navigation commands to Pinky robot"""
+class PinkyClient(Node):
+    """Minimal ROS2 node used by the gateway server to command Pinky."""
 
-    def __init__(self):
-        super().__init__("pinky_navigation_client")
-        self._action_client = ActionClient(self, NavigateToPose, "navigate_to_pose")
-        self._goal_handle = None
-        self._result_future = None
+    def __init__(self) -> None:
+        super().__init__("pinky_client")
 
-        # Topic publisher for /pinky/target
-        self.target_publisher = self.create_publisher(
-            PorterTarget, "/porter_target", 10
+        # Publisher: send navigation targets to the robot
+        self.target_pub = self.create_publisher(PorterTarget, "/porter_target", 10)
+
+        # Subscriber: receive completion notification from the robot
+        self._status_event = threading.Event()
+        self._last_status: PorterStatus | None = None
+
+        self._status_sub = self.create_subscription(
+            PorterStatus, "/porter_status", self._status_cb, 10
         )
 
-        self.get_logger().info("Pinky navigation client initialized")
+        self.get_logger().info("PinkyClient initialised")
+
+    def _status_cb(self, msg: PorterStatus) -> None:
+        """Handle /porter_status message from pid_node."""
+        self.get_logger().info(
+            f"/porter_status received: status='{msg.status}' "
+            f"x={msg.x:.4f}, y={msg.y:.4f}, yaw={msg.yaw:.4f}"
+        )
+        self._last_status = msg
+        self._status_event.set()
+
+    def clear_status(self) -> None:
+        """Reset completion state before starting a new navigation leg."""
+        self._last_status = None
+        self._status_event.clear()
 
 
-def _get_ros_node() -> PinkyNavigationClient:
-    """Get or create the global ROS2 node instance"""
+# ---------------------------------------------------------------------------
+# Singleton accessor
+# ---------------------------------------------------------------------------
+
+def _get_ros_node() -> PinkyClient:
+    """Return (and lazily create) the global PinkyClient node."""
     global _ros_node
 
     with _ros_lock:
         if _ros_node is None:
-            # Initialize rclpy if not already initialized
             if not rclpy.ok():
                 rclpy.init()
-
-            _ros_node = PinkyNavigationClient()
+            _ros_node = PinkyClient()
 
     return _ros_node
 
 
-def cmd_pinky(position) -> bool:
-    """
-    Send navigation command to Pinky robot
+# ---------------------------------------------------------------------------
+# Public API
+# ---------------------------------------------------------------------------
+
+def send_pinky_target(position) -> bool:
+    """Publish a navigation target to the robot via /porter_target.
 
     Args:
-        position: Object with x, y, w attributes
-                 x, y: coordinates in meters
-                 w: yaw angle in radians
+        position: Object with ``x``, ``y``, ``yaw`` attributes (floats, metres/radians).
 
     Returns:
-        bool: True if command was sent successfully, False otherwise
+        True if the message was published successfully, False otherwise.
     """
-    x = position.x
-    y = position.y
-    yaw = position.yaw
-
     try:
         node = _get_ros_node()
+        node.clear_status()
 
-        # Wait for action server
-        if not node._action_client.wait_for_server(timeout_sec=5.0):
-            node.get_logger().error("Navigation action server not available")
-            return False
+        msg = PorterTarget()
+        msg.x = float(position.x)
+        msg.y = float(position.y)
+        msg.yaw = float(position.yaw)
 
-        # Create goal message
-        goal_msg = NavigateToPose.Goal()
-        goal_msg.pose.header.frame_id = "map"
-        goal_msg.pose.header.stamp = node.get_clock().now().to_msg()
-
-        # Set position
-        goal_msg.pose.pose.position.x = x
-        goal_msg.pose.pose.position.y = y
-        goal_msg.pose.pose.position.z = 0.0
-
-        # Convert yaw to quaternion
-        goal_msg.pose.pose.orientation.x = 0.0
-        goal_msg.pose.pose.orientation.y = 0.0
-        goal_msg.pose.pose.orientation.z = math.sin(yaw / 2.0)
-        goal_msg.pose.pose.orientation.w = math.cos(yaw / 2.0)
-
-        node.get_logger().info(f"Sending goal: x={x:.4f}, y={y:.4f}, yaw={yaw:.4f} rad")
-
-        # Send goal
-        send_goal_future = node._action_client.send_goal_async(goal_msg)
-        rclpy.spin_until_future_complete(node, send_goal_future, timeout_sec=5.0)
-
-        if not send_goal_future.done():
-            node.get_logger().error("Failed to send goal - timeout")
-            return False
-
-        node._goal_handle = send_goal_future.result()
-
-        if not node._goal_handle.accepted:
-            node.get_logger().error("Goal was rejected by action server")
-            return False
-
-        node.get_logger().info("Goal accepted by action server")
-        node._result_future = node._goal_handle.get_result_async()
+        node.target_pub.publish(msg)
+        node.get_logger().info(
+            f"Published /porter_target: x={msg.x:.4f}, y={msg.y:.4f}, yaw={msg.yaw:.4f}"
+        )
         return True
 
     except Exception as e:
-        print(f"Error sending goal to Pinky: {e}")
+        print(f"Error publishing /porter_target: {e}")
         return False
 
 
 def wait_pinky(timeout: int) -> bool:
-    """
-    Wait for Pinky to reach the navigation goal
+    """Block until /porter_status is received or timeout expires.
+
+    Spins the ROS node in a loop so callbacks are processed while waiting.
 
     Args:
-        timeout: Maximum time to wait in seconds
+        timeout: Maximum seconds to wait.
 
     Returns:
-        bool: True if goal was reached, False if timeout or failed
+        True if the robot reported ``status == "arrived"``, False otherwise.
     """
     try:
         node = _get_ros_node()
-        timeout_sec = float(timeout)
+        deadline = rclpy.clock.Clock().now().nanoseconds * 1e-9 + float(timeout)
 
-        if node._result_future is None:
-            node.get_logger().error("No active goal to wait for")
-            return False
+        while rclpy.ok():
+            # Process any pending ROS callbacks (non-blocking spin_once)
+            rclpy.spin_once(node, timeout_sec=0.1)
 
-        rclpy.spin_until_future_complete(
-            node, node._result_future, timeout_sec=timeout_sec
-        )
+            if node._status_event.is_set():
+                status = node._last_status
+                if status is not None and status.status == "arrived":
+                    node.get_logger().info("Navigation complete: arrived")
+                    return True
+                else:
+                    node.get_logger().warn(
+                        f"Unexpected status: {status.status if status else 'None'}"
+                    )
+                    return False
 
-        if not node._result_future.done():
-            node.get_logger().warn(f"Navigation timeout after {timeout_sec} seconds")
-            # Cancel the goal
-            if node._goal_handle:
-                cancel_future = node._goal_handle.cancel_goal_async()
-                rclpy.spin_until_future_complete(node, cancel_future, timeout_sec=2.0)
-            return False
+            remaining = deadline - rclpy.clock.Clock().now().nanoseconds * 1e-9
+            if remaining <= 0:
+                node.get_logger().warn(
+                    f"Navigation timeout after {timeout} s — no /porter_status received"
+                )
+                return False
 
-        result = node._result_future.result()
-
-        if result.status == GoalStatus.STATUS_SUCCEEDED:
-            node.get_logger().info("Navigation succeeded!")
-            return True
-        else:
-            node.get_logger().error(f"Navigation failed with status: {result.status}")
-            return False
+        return False
 
     except Exception as e:
         print(f"Error waiting for Pinky: {e}")
         return False
 
 
-def publish_pinky_target(x: float, y: float, yaw: float) -> bool:
-    """
-    Publish target to /pinky/target topic
+def nav_pinky(position, timeout: int = 120) -> bool:
+    """Send navigation target and wait for completion.
+
+    Convenience wrapper combining ``send_pinky_target`` and ``wait_pinky``.
 
     Args:
-        x: X coordinate
-        y: Y coordinate
-        yaw: Yaw angle in radians
+        position: Object with ``x``, ``y``, ``yaw`` attributes.
+        timeout:  Maximum seconds to wait for arrival (default 120).
 
     Returns:
-        bool: True if message was published successfully, False otherwise
+        True if Pinky arrived successfully, False otherwise.
     """
-    try:
-        node = _get_ros_node()
-
-        target = PorterTarget()
-        target.x = x
-        target.y = y
-        target.yaw = yaw
-
-        node.target_publisher.publish(target)
-        node.get_logger().info(f"Published target: x={x:.4f}, y={y:.4f}, yaw={yaw:.4f}")
-
-        return True
-    except Exception as e:
-        print(f"Error publishing target: {e}")
+    if not send_pinky_target(position):
         return False
+    return wait_pinky(timeout)
