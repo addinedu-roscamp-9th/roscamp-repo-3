@@ -15,6 +15,7 @@ find_package(rosidl_default_generators REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/PorterTarget.msg"
+  "msg/PorterStatus.msg"
 )
 
 if(BUILD_TESTING)
