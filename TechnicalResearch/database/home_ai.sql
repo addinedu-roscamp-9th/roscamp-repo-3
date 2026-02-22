@@ -102,7 +102,7 @@ create table positions (
         position_name varchar(30) not null,
         x             float not null,
         y             float not null,
-        w             float not null
+        yaw           float not null
     );
 
 insert into positions values ('p2602150001', 'charger', 0.0, 0.0, 0.0);
