@@ -60,7 +60,7 @@ class Position(Base):
     position_name = Column(String(30), nullable=False)
     x = Column(Float, nullable=False)
     y = Column(Float, nullable=False)
-    w = Column(Float, nullable=False)
+    yaw = Column(Float, nullable=False)
 
 
 class Angle(Base):

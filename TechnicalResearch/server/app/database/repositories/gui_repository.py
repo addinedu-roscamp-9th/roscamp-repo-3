@@ -39,7 +39,7 @@ def sel_position_by_id(position_id):
     db = SessionLocal()
     try:
         return (
-            db.query(Position.x, Position.y, Position.w)
+            db.query(Position.x, Position.y, Position.yaw)
             .filter(Position.position_id == position_id)
             .first()
         )
@@ -51,7 +51,7 @@ def sel_pos_by_name(position_name):
     db = SessionLocal()
     try:
         return (
-            db.query(Position.x, Position.y, Position.w)
+            db.query(Position.x, Position.y, Position.yaw)
             .filter(Position.position_name == position_name)
             .first()
         )

@@ -23,7 +23,9 @@ class PinkyNavigationClient(Node):
         self._result_future = None
 
         # Topic publisher for /pinky/target
-        self.target_publisher = self.create_publisher(PorterTarget, "/porter_target", 10)
+        self.target_publisher = self.create_publisher(
+            PorterTarget, "/porter_target", 10
+        )
 
         self.get_logger().info("Pinky navigation client initialized")
 
@@ -57,7 +59,7 @@ def cmd_pinky(position) -> bool:
     """
     x = position.x
     y = position.y
-    w = position.w  # yaw in radians
+    yaw = position.yaw
 
     try:
         node = _get_ros_node()
@@ -80,10 +82,10 @@ def cmd_pinky(position) -> bool:
         # Convert yaw to quaternion
         goal_msg.pose.pose.orientation.x = 0.0
         goal_msg.pose.pose.orientation.y = 0.0
-        goal_msg.pose.pose.orientation.z = math.sin(w / 2.0)
-        goal_msg.pose.pose.orientation.w = math.cos(w / 2.0)
+        goal_msg.pose.pose.orientation.z = math.sin(yaw / 2.0)
+        goal_msg.pose.pose.orientation.w = math.cos(yaw / 2.0)
 
-        node.get_logger().info(f"Sending goal: x={x:.2f}, y={y:.2f}, yaw={w:.2f} rad")
+        node.get_logger().info(f"Sending goal: x={x:.4f}, y={y:.4f}, yaw={yaw:.4f} rad")
 
         # Send goal
         send_goal_future = node._action_client.send_goal_async(goal_msg)
@@ -152,14 +154,14 @@ def wait_pinky(timeout: int) -> bool:
         return False
 
 
-def publish_pinky_target(x: float, y: float, w: float) -> bool:
+def publish_pinky_target(x: float, y: float, yaw: float) -> bool:
     """
     Publish target to /pinky/target topic
 
     Args:
         x: X coordinate
         y: Y coordinate
-        w: Yaw angle in radians
+        yaw: Yaw angle in radians
 
     Returns:
         bool: True if message was published successfully, False otherwise
@@ -170,10 +172,10 @@ def publish_pinky_target(x: float, y: float, w: float) -> bool:
         target = PorterTarget()
         target.x = x
         target.y = y
-        target.w = w
+        target.yaw = yaw
 
         node.target_publisher.publish(target)
-        node.get_logger().info(f"Published target: x={x:.3f}, y={y:.3f}, w={w:.3f}")
+        node.get_logger().info(f"Published target: x={x:.4f}, y={y:.4f}, yaw={yaw:.4f}")
 
         return True
     except Exception as e:

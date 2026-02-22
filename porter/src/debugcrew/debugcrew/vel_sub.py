@@ -17,18 +17,18 @@ class VelSub(Node):
 
     def target_callback(self, msg: PorterTarget) -> None:
         """Receives target position (x, y) and orientation (w), sends Nav2 goal."""
-        self.get_logger().info(f"Received target: x={msg.x}, y={msg.y}, w={msg.w}")
+        self.get_logger().info(f"Received target: x={msg.x}, y={msg.y}, yaw={msg.yaw}")
 
         goal = PoseStamped()
         goal.header.stamp = self.get_clock().now().to_msg()
         goal.header.frame_id = "map"
         goal.pose.position.x = float(msg.x)
         goal.pose.position.y = float(msg.y)
-        goal.pose.orientation.w = float(msg.w)
+        goal.pose.orientation.w = float(msg.yaw)
 
         self.publisher.publish(goal)
         self.get_logger().info(
-            f"Goal sent: x={msg.x}, y={msg.y}, orientation.w={msg.w}"
+            f"Goal sent: x={msg.x}, y={msg.y}, orientation.w={msg.yaw}"
         )
 
 
