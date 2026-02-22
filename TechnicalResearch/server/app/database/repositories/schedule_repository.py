@@ -1,3 +1,6 @@
+import random
+from datetime import datetime
+
 from app.database.connection import SessionLocal
 from app.models.tables import Schedule
 
@@ -13,14 +16,11 @@ def select_all_schedules():
 def insert_schedule(data):
     db = SessionLocal()
     try:
-        from datetime import datetime
-        import random
-
         execute_time_str = data.get("execute_time")
         execute_time = datetime.strptime(execute_time_str, "%H:%M:%S").time()
-
-        # schedule_id 자동 생성
-        schedule_id = f"s{random.randint(1000000000, 9999999999)}"
+        # schedule_id 자동 생성: s + YYMMDD + 4자리 랜덤 숫자 (예: s2602220001)
+        date_part = datetime.now().strftime("%y%m%d")
+        schedule_id = f"s{date_part}{random.randint(1000, 9999)}"
 
         new_schedule = Schedule(
             schedule_id=schedule_id,
