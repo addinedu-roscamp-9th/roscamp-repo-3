@@ -10,8 +10,13 @@ from rclpy.node import Node
 from rclpy.qos import QoSDurabilityPolicy, QoSProfile, QoSReliabilityPolicy
 
 
-# Distance (metres) at which Nav2 is cancelled and PID takes over
-SWITCH_DISTANCE = 0.30
+# Distance (metres) at which Nav2 is cancelled and PID takes over for fine positioning.
+# Keep this small so Nav2 does obstacle-aware path planning for the bulk of the journey.
+SWITCH_DISTANCE = 0.10
+
+# Distance (metres) below which the goal is too close for Nav2 to plan a path at all;
+# in this case skip Nav2 entirely and go straight to PID.
+NAV2_MIN_DISTANCE = 0.12
 
 
 def _yaw_to_quaternion(yaw: float) -> tuple[float, float]:
@@ -29,6 +34,7 @@ class VelSub(Node):
         self._goal_handle = None
         self._target: PorterTarget | None = None
         self._pid_activated = False
+        self._nav2_navigating = False   # True once Nav2 has reported distance > SWITCH_DISTANCE
         self._current_pose: tuple[float, float, float] | None = None  # (x, y, yaw)
 
         # Nav2 action client
@@ -81,18 +87,19 @@ class VelSub(Node):
         )
         self._target = msg
         self._pid_activated = False
+        self._nav2_navigating = False
 
-        # If the goal is already within PID range, skip Nav2 entirely and go
-        # straight to PID. This handles goals that are very close (< 5 cm) where
-        # Nav2 may reject or never reach the SWITCH_DISTANCE feedback threshold.
+        # If the goal is too close for Nav2 to plan a path, skip it entirely and
+        # go straight to PID. For anything further away, Nav2 handles obstacle-aware
+        # navigation and only hands off to PID for the final SWITCH_DISTANCE metres.
         if self._current_pose is not None:
             dx = float(msg.x) - self._current_pose[0]
             dy = float(msg.y) - self._current_pose[1]
             dist = math.sqrt(dx * dx + dy * dy)
-            if dist <= SWITCH_DISTANCE:
+            if dist <= NAV2_MIN_DISTANCE:
                 self.get_logger().info(
-                    f"Goal is {dist:.3f} m away (≤ {SWITCH_DISTANCE} m) "
-                    "— skipping Nav2, activating PID directly"
+                    f"Goal is {dist:.3f} m away (≤ {NAV2_MIN_DISTANCE} m) "
+                    "— too close for Nav2, activating PID directly"
                 )
                 # Cancel any in-flight Nav2 goal first
                 if self._goal_handle is not None:
@@ -175,7 +182,12 @@ class VelSub(Node):
         remaining = feedback_msg.feedback.distance_remaining
         self.get_logger().debug(f"Nav2 distance remaining: {remaining:.3f} m")
 
-        if remaining < SWITCH_DISTANCE and self._target is not None:
+        # Nav2 sometimes reports 0.0 on the very first feedback tick before the
+        # path is computed. Only arm the handoff once we've seen a real distance.
+        if remaining > SWITCH_DISTANCE:
+            self._nav2_navigating = True
+
+        if self._nav2_navigating and remaining < SWITCH_DISTANCE and self._target is not None:
             self.get_logger().info(
                 f"Distance {remaining:.3f} m < {SWITCH_DISTANCE} m "
                 "— cancelling Nav2, activating PID"
@@ -231,12 +243,8 @@ class VelSub(Node):
             self._publish_pid_activate()
         else:
             self.get_logger().warn(
-                f"Nav2 finished with non-success status: {status} "
-                "— activating PID as fallback"
+                f"Nav2 finished with non-success status: {status} — navigation failed"
             )
-            if not self._pid_activated and self._target is not None:
-                self._pid_activated = True
-                self._publish_pid_activate()
 
 
 def main(args=None) -> None:
