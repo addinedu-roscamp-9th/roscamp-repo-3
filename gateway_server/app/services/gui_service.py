@@ -78,8 +78,8 @@ def _drop_sequence():
     home_angle = gui_repository.sel_angle_by_angle_name(ANGLE_HOME)
 
     return [
-        _create_angles(drop_angle, gap=100),
-        _create_angles(home_angle, gap=100),
+        _create_angles(drop_angle, gap=30),
+        _create_angles(home_angle, gap=30),
     ]
 
 
@@ -200,7 +200,10 @@ def _trash_sequence():
 
 def take_confirm():
     dz_pos = gui_repository.sel_pos_by_name(POS_DZ)
-    if not nav_pinky(dz_pos):
+
+    take_res = nav_pinky(dz_pos)
+
+    if not take_res:
         print("Pinky failed to reach DZ")
         return {"success": False}
 

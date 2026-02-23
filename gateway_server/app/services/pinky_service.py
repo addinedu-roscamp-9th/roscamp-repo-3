@@ -104,6 +104,13 @@ def send_pinky_target(position) -> bool:
     """
     try:
         node = _get_ros_node()
+
+        # Flush any stale /porter_status messages that are sitting in the ROS
+        # middleware queue from a previous navigation leg.  spin_once delivers
+        # them to _status_cb (setting _status_event), after which we call
+        # clear_status() so wait_pinky starts with a clean slate.
+        for _ in range(10):
+            rclpy.spin_once(node, timeout_sec=0.01)
         node.clear_status()
 
         msg = PorterTarget()
@@ -115,12 +122,6 @@ def send_pinky_target(position) -> bool:
         msg.yaw = math.radians(float(position.yaw))
 
         # Wait for vel_sub subscriber to be discovered (up to 2 s).
-        # ROS 2 subscriber discovery is asynchronous; publishing immediately
-        # after node creation drops the message before vel_sub is matched.
-        # Use time.sleep instead of spin_once so that no ROS callbacks are
-        # processed here — spin_once would risk delivering a /porter_status
-        # message (from the previous run) and setting _status_event before
-        # wait_pinky even starts.
         deadline = time.monotonic() + 2.0
         while node.target_pub.get_subscription_count() == 0:
             time.sleep(0.05)
