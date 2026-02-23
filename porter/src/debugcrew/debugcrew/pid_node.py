@@ -33,8 +33,11 @@ SWITCH_DISTANCE = 0.08    # metres — initial PID coarse→fine switch (replica
 P_LIN, I_LIN, D_LIN = 1.2, 0.02, 0.10
 MAX_LIN, MIN_LIN = 0.20, -0.20
 
-P_ANG, I_ANG, D_ANG = 2.0, 0.00, 0.10
-MAX_ANG, MIN_ANG = 0.80, -0.80
+# Angular gain reduced from 2.0 → 1.5 to soften the initial spin on PID entry.
+# The robot is already roughly aligned after Nav2; a lower gain gives smoother
+# convergence without sacrificing tracking speed at larger errors.
+P_ANG, I_ANG, D_ANG = 1.5, 0.00, 0.05
+MAX_ANG, MIN_ANG = 0.60, -0.60
 
 CONTROL_PERIOD = 0.05     # seconds (20 Hz)
 
@@ -182,6 +185,12 @@ class PidNode(Node):
         self._mode = "PID_POS"
         self._lin_pid.reset()
         self._ang_pid.reset()
+        # Seed prev_time with the current clock so the very first PID derivative
+        # step uses a real dt rather than the 0.01 s hardcoded fallback, which
+        # would produce a large angular kick and cause the entry spin.
+        now = self.get_clock().now().nanoseconds * 1e-9
+        self._lin_pid._prev_time = now
+        self._ang_pid._prev_time = now
 
     # ------------------------------------------------------------------
     # Control loop (20 Hz)

@@ -3,7 +3,7 @@ import math
 import rclpy as rp
 from action_msgs.msg import GoalStatus
 from debugcrew_msgs.msg import PorterTarget
-from geometry_msgs.msg import PoseWithCovarianceStamped
+from geometry_msgs.msg import PoseWithCovarianceStamped, Twist
 from nav2_msgs.action import NavigateToPose
 from rclpy.action.client import ActionClient
 from rclpy.node import Node
@@ -60,6 +60,11 @@ class VelSub(Node):
 
         # Publisher to activate the PID node with the precise final target
         self._pid_pub = self.create_publisher(PorterTarget, "/pid_activate", 10)
+
+        # Direct /cmd_vel publisher so we can zero velocity the instant Nav2 is
+        # cancelled — before the cancel round-trip completes and before pid_node
+        # takes over. This eliminates the slow spin during the handoff gap.
+        self._cmd_vel_pub = self.create_publisher(Twist, "/cmd_vel", 10)
 
         self.get_logger().info("vel_sub started — waiting for /porter_target")
 
@@ -195,8 +200,15 @@ class VelSub(Node):
             self._pid_activated = True
             self._activate_pid()
 
+    def _publish_stop(self) -> None:
+        """Send an immediate zero-velocity command to stop the robot."""
+        self._cmd_vel_pub.publish(Twist())
+
     def _activate_pid(self) -> None:
         """Cancel Nav2 and hand control to the PID node."""
+        # Zero velocity immediately so Nav2's controller output stops driving
+        # the robot during the cancel round-trip (which can take 100-300 ms).
+        self._publish_stop()
         if self._goal_handle is not None:
             cancel_future = self._goal_handle.cancel_goal_async()
             cancel_future.add_done_callback(self._on_nav2_cancelled)
