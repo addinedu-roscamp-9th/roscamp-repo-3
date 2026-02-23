@@ -15,6 +15,7 @@ Flow
 3. ``nav_pinky(position, timeout)`` is a convenience wrapper for both steps.
 """
 
+import math
 import threading
 import time
 
@@ -90,7 +91,13 @@ def send_pinky_target(position) -> bool:
     """Publish a navigation target to the robot via /porter_target.
 
     Args:
-        position: Object with ``x``, ``y``, ``yaw`` attributes (floats, metres/radians).
+        position: Object with ``x``, ``y``, ``yaw`` attributes (floats).
+                  ``x`` and ``y`` are in metres.
+                  ``yaw`` is in **degrees** (as stored in the DB):
+                    0   → facing +X axis (initial/forward direction)
+                    90  → turned 90° to the left  (facing +Y)
+                    -90 → turned 90° to the right (facing -Y)
+                  The value is converted to radians before publishing to ROS.
 
     Returns:
         True if the message was published successfully, False otherwise.
@@ -102,14 +109,21 @@ def send_pinky_target(position) -> bool:
         msg = PorterTarget()
         msg.x = float(position.x)
         msg.y = float(position.y)
-        msg.yaw = float(position.yaw)
+        # position.yaw is in degrees (as stored in the DB); convert to radians
+        # for the ROS pipeline.  0° = facing +X, 90° = facing +Y (left turn),
+        # -90° = facing -Y (right turn).
+        msg.yaw = math.radians(float(position.yaw))
 
         # Wait for vel_sub subscriber to be discovered (up to 2 s).
         # ROS 2 subscriber discovery is asynchronous; publishing immediately
         # after node creation drops the message before vel_sub is matched.
+        # Use time.sleep instead of spin_once so that no ROS callbacks are
+        # processed here — spin_once would risk delivering a /porter_status
+        # message (from the previous run) and setting _status_event before
+        # wait_pinky even starts.
         deadline = time.monotonic() + 2.0
         while node.target_pub.get_subscription_count() == 0:
-            rclpy.spin_once(node, timeout_sec=0.05)
+            time.sleep(0.05)
             if time.monotonic() > deadline:
                 node.get_logger().warn(
                     "No subscriber on /porter_target after 2 s — publishing anyway"
@@ -140,7 +154,7 @@ def wait_pinky(timeout: int) -> bool:
     """
     try:
         node = _get_ros_node()
-        deadline = rclpy.clock.Clock().now().nanoseconds * 1e-9 + float(timeout)
+        deadline = time.monotonic() + float(timeout)
 
         while rclpy.ok():
             # Process any pending ROS callbacks (non-blocking spin_once)
@@ -148,6 +162,7 @@ def wait_pinky(timeout: int) -> bool:
 
             if node._status_event.is_set():
                 status = node._last_status
+                node._status_event.clear()
                 if status is not None and status.status == "arrived":
                     node.get_logger().info("Navigation complete: arrived")
                     return True
@@ -157,8 +172,7 @@ def wait_pinky(timeout: int) -> bool:
                     )
                     return False
 
-            remaining = deadline - rclpy.clock.Clock().now().nanoseconds * 1e-9
-            if remaining <= 0:
+            if time.monotonic() >= deadline:
                 node.get_logger().warn(
                     f"Navigation timeout after {timeout} s — no /porter_status received"
                 )
@@ -178,6 +192,7 @@ def nav_pinky(position, timeout: int = 120) -> bool:
 
     Args:
         position: Object with ``x``, ``y``, ``yaw`` attributes.
+                  ``yaw`` must be in **degrees** (see ``send_pinky_target``).
         timeout:  Maximum seconds to wait for arrival (default 120).
 
     Returns:

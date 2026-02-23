@@ -84,8 +84,8 @@ values
     ('a2602150004', 'i2602150002', 'pick juice', 99.66, -59.23, -19.07, -16.08, 8.78, -37.17),
     ('a2602150005', 'i2602150003', 'pick pill', 131.66, -68.55, -19.68, 0.61, 13.79, -10.54),
     ('a2602150006', null, 'pinky side', 0.96, -2.1, -6.76, -68.9, 19.33, -46.66),
-    ('a2602150007', null, 'drop', 4.57, -87.01, -7.38, -8.52, 10.19, -36.73),
-    ('a2602150008', null, 'trash side', 0.43, -90.43, -6.85, -2.63, 17.13, -45.61),
+    ('a2602150007', null, 'drop', 3.86, -29.61, -64.16, 10.54, 13.27, -42.97),
+    ('a2602150008', null, 'trash side', -88.85, 0.26, -33.48, -13.35, 20.47, -45.7),
     ('a2602150009', null, 'trash general', -63.1, -61.96, -6.85, 13.44, 3.69, -27.07),
     ('a2602150010', null, 'trash paper', -86.3, -64.16, -7.38, 20.03, 8.87, -34.27);
 
@@ -105,11 +105,10 @@ create table positions (
         yaw           float not null
     );
 
-insert into positions values ('p2602150001', 'charger', 0.0, 0.0, 0.0);
-insert into positions values ('p2602150002', 'drop zone', 0.2213, 0.0043, 0.0);
-insert into positions values ('p2602150003', 'living room', 0.5041, 1.3010, 0.0);
-insert into positions values ('p2602150004', 'bed room', 0.0037, 1.13495, 0.0);
-insert into positions values ('p2602150005', 'check point', 0.3073, 0.0, 0.0);
+insert into positions values ('p2602150001', 'charger', 0.0, 0.05, 0.0);
+insert into positions values ('p2602150002', 'drop zone', 0.24, -0.05, 90.0);
+insert into positions values ('p2602150003', 'living room', 0.55, 0.95, -90.0);
+insert into positions values ('p2602150004', 'bed room', 0.0, 0.9, -90.0);
 
 create table schedules (
         schedule_id  varchar(11) primary key,
