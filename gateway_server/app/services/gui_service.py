@@ -15,7 +15,6 @@ JETCOBOT_PORT = int(os.getenv("JETCOBOT_PORT", "8001"))
 
 POS_DZ = "drop zone"
 POS_CHARGER = "charger"
-POS_CHECK_POINT = "check point"
 
 ANGLE_SHELVE_SIDE = "shelve side"
 ANGLE_PINKY_SIDE = "pinky side"
@@ -139,12 +138,6 @@ def fetch_cmd(data):
     if not cmd_arm(drop_seq):
         print("Arm failed to drop item to pinky")
         return {"success": False}
-
-    # TEST: go through checkpoint only when going to "living room"
-    if str(position_id) == "p2602150003":
-        check_point = gui_repository.sel_pos_by_name(POS_CHECK_POINT)
-        check_point_res = nav_pinky(check_point)
-        print(f"check_point_res: {check_point_res}")
 
     target_pos = gui_repository.sel_position_by_id(position_id)
     if target_pos is None:

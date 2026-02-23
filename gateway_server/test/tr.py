@@ -46,5 +46,5 @@ async def take_req(position_id):
 
 
 if __name__ == "__main__":
-    success = asyncio.run(take_req("p2602150002"))
+    success = asyncio.run(take_req("p2602150003"))
     sys.exit(0 if success else 1)

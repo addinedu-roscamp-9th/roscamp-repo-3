@@ -16,6 +16,7 @@ Flow
 """
 
 import threading
+import time
 
 import rclpy
 from debugcrew_msgs.msg import PorterStatus, PorterTarget
@@ -66,6 +67,7 @@ class PinkyClient(Node):
 # Singleton accessor
 # ---------------------------------------------------------------------------
 
+
 def _get_ros_node() -> PinkyClient:
     """Return (and lazily create) the global PinkyClient node."""
     global _ros_node
@@ -82,6 +84,7 @@ def _get_ros_node() -> PinkyClient:
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
+
 
 def send_pinky_target(position) -> bool:
     """Publish a navigation target to the robot via /porter_target.
@@ -100,6 +103,18 @@ def send_pinky_target(position) -> bool:
         msg.x = float(position.x)
         msg.y = float(position.y)
         msg.yaw = float(position.yaw)
+
+        # Wait for vel_sub subscriber to be discovered (up to 2 s).
+        # ROS 2 subscriber discovery is asynchronous; publishing immediately
+        # after node creation drops the message before vel_sub is matched.
+        deadline = time.monotonic() + 2.0
+        while node.target_pub.get_subscription_count() == 0:
+            rclpy.spin_once(node, timeout_sec=0.05)
+            if time.monotonic() > deadline:
+                node.get_logger().warn(
+                    "No subscriber on /porter_target after 2 s — publishing anyway"
+                )
+                break
 
         node.target_pub.publish(msg)
         node.get_logger().info(
