@@ -36,6 +36,8 @@ class VelSub(Node):
         self._pid_activated = False
         self._nav2_navigating = False   # True once Nav2 has reported distance > SWITCH_DISTANCE
         self._current_pose: tuple[float, float, float] | None = None  # (x, y, yaw)
+        self._nav2_server_ready = False  # Latched True after first successful server check
+        self._generation = 0  # Incremented on every new target; guards stale callbacks
 
         # Nav2 action client
         self._nav_client = ActionClient(self, NavigateToPose, "navigate_to_pose")
@@ -81,6 +83,26 @@ class VelSub(Node):
         yaw = math.atan2(siny_cosp, cosy_cosp)
         self._current_pose = (float(p.position.x), float(p.position.y), yaw)
 
+        # AMCL publishes at ~10 Hz — use it to trigger the Nav2→PID handoff
+        # instead of waiting for Nav2 feedback which arrives at only ~1 Hz.
+        # This eliminates up to ~1 s of unnecessary delay for close targets.
+        if (
+            self._nav2_navigating
+            and not self._pid_activated
+            and self._target is not None
+            and self._goal_handle is not None
+        ):
+            dx = float(self._target.x) - float(p.position.x)
+            dy = float(self._target.y) - float(p.position.y)
+            dist = math.sqrt(dx * dx + dy * dy)
+            if dist < SWITCH_DISTANCE:
+                self.get_logger().info(
+                    f"AMCL: distance {dist:.3f} m < {SWITCH_DISTANCE} m "
+                    "— cancelling Nav2, activating PID"
+                )
+                self._pid_activated = True
+                self._activate_pid()  # uses self._generation internally
+
     # ------------------------------------------------------------------
     # Target received from server
     # ------------------------------------------------------------------
@@ -93,6 +115,8 @@ class VelSub(Node):
         self._target = msg
         self._pid_activated = False
         self._nav2_navigating = False
+        self._generation += 1
+        gen = self._generation
 
         # If the goal is too close for Nav2 to plan a path, skip it entirely and
         # go straight to PID. For anything further away, Nav2 handles obstacle-aware
@@ -110,11 +134,11 @@ class VelSub(Node):
                 if self._goal_handle is not None:
                     self.get_logger().info("Cancelling previous Nav2 goal")
                     cancel_future = self._goal_handle.cancel_goal_async()
-                    cancel_future.add_done_callback(lambda _: self._publish_pid_activate())
+                    cancel_future.add_done_callback(lambda _, g=gen: self._publish_pid_activate(g))
                     self._goal_handle = None
                 else:
                     self._pid_activated = True
-                    self._publish_pid_activate()
+                    self._publish_pid_activate(gen)
                 return
 
         # Cancel any in-flight Nav2 goal before issuing a new one
@@ -132,9 +156,14 @@ class VelSub(Node):
 
     def _send_nav2_goal(self, target: PorterTarget) -> None:
         """Build and send a NavigateToPose goal for the given target."""
-        if not self._nav_client.wait_for_server(timeout_sec=5.0):
-            self.get_logger().error("Nav2 action server not available — aborting")
-            return
+        # Only block on the very first call. wait_for_server blocks the entire
+        # spin loop for up to timeout_sec — on every subsequent goal the server
+        # is already running, so checking again wastes seconds before each move.
+        if not self._nav2_server_ready:
+            if not self._nav_client.wait_for_server(timeout_sec=5.0):
+                self.get_logger().error("Nav2 action server not available — aborting")
+                return
+            self._nav2_server_ready = True
 
         qz, qw = _yaw_to_quaternion(float(target.yaw))
 
@@ -157,6 +186,7 @@ class VelSub(Node):
 
     def _nav2_goal_response_cb(self, future) -> None:
         """Handle Nav2 goal acceptance/rejection."""
+        gen = self._generation
         try:
             goal_handle = future.result()
         except Exception as e:
@@ -169,15 +199,17 @@ class VelSub(Node):
             )
             if not self._pid_activated and self._target is not None:
                 self._pid_activated = True
-                self._publish_pid_activate()
+                self._publish_pid_activate(gen)
             return
 
         self.get_logger().info("Nav2 goal accepted")
         self._goal_handle = goal_handle
 
-        # Register result callback (fires when Nav2 finishes normally)
+        # Register result callback (fires when Nav2 finishes normally).
+        # Capture the generation so a result from a previous run after a
+        # server-side timeout cannot trigger PID for the current target.
         result_future = goal_handle.get_result_async()
-        result_future.add_done_callback(self._nav2_result_cb)
+        result_future.add_done_callback(lambda f: self._nav2_result_cb(f, gen))
 
     def _nav2_feedback_cb(self, feedback_msg) -> None:
         """Monitor remaining distance; hand off to PID when close enough."""
@@ -209,24 +241,31 @@ class VelSub(Node):
         # Zero velocity immediately so Nav2's controller output stops driving
         # the robot during the cancel round-trip (which can take 100-300 ms).
         self._publish_stop()
+        gen = self._generation
         if self._goal_handle is not None:
             cancel_future = self._goal_handle.cancel_goal_async()
-            cancel_future.add_done_callback(self._on_nav2_cancelled)
+            cancel_future.add_done_callback(lambda f: self._on_nav2_cancelled(f, gen))
             self._goal_handle = None
         else:
-            self._publish_pid_activate()
+            self._publish_pid_activate(gen)
 
-    def _on_nav2_cancelled(self, future) -> None:
+    def _on_nav2_cancelled(self, future, gen: int) -> None:
         """Called once Nav2 cancel is confirmed; then publish PID activation."""
+        if gen != self._generation:
+            self.get_logger().debug("Stale cancel callback ignored (new target arrived)")
+            return
         try:
             future.result()
             self.get_logger().info("Nav2 goal cancelled successfully")
         except Exception as e:
             self.get_logger().warn(f"Nav2 cancel returned error (ignoring): {e}")
-        self._publish_pid_activate()
+        self._publish_pid_activate(gen)
 
-    def _publish_pid_activate(self) -> None:
+    def _publish_pid_activate(self, gen: int | None = None) -> None:
         """Publish the final target to /pid_activate so the PID node takes over."""
+        if gen is not None and gen != self._generation:
+            self.get_logger().debug("Stale PID activate ignored (new target arrived)")
+            return
         if self._target is None:
             return
         self.get_logger().info(
@@ -235,8 +274,14 @@ class VelSub(Node):
         )
         self._pid_pub.publish(self._target)
 
-    def _nav2_result_cb(self, future) -> None:
+    def _nav2_result_cb(self, future, gen: int) -> None:
         """Handle Nav2 navigation result (only relevant if PID was not triggered)."""
+        # Discard results from a previous navigation run that completed after
+        # the server timed out and a new target (or no target) is now active.
+        if gen != self._generation:
+            self.get_logger().debug("Stale Nav2 result ignored (new target arrived)")
+            return
+
         if self._pid_activated:
             return  # PID already took over — ignore Nav2 result
 
@@ -250,7 +295,7 @@ class VelSub(Node):
             if self._target is not None:
                 self.get_logger().warn("Activating PID as fallback after Nav2 result error")
                 self._pid_activated = True
-                self._publish_pid_activate()
+                self._publish_pid_activate(gen)
             return
 
         if status == GoalStatus.STATUS_SUCCEEDED:
@@ -258,7 +303,7 @@ class VelSub(Node):
                 "Nav2 reached goal without PID handoff — activating PID for fine correction"
             )
             self._pid_activated = True
-            self._publish_pid_activate()
+            self._publish_pid_activate(gen)
         elif status == GoalStatus.STATUS_CANCELED:
             # Goal was cancelled by us (new target arrived) — the new send_nav2_goal
             # or publish_pid_activate path is already in flight; nothing to do here.
@@ -271,7 +316,7 @@ class VelSub(Node):
                 f"Nav2 finished with status {status} — activating PID as fallback"
             )
             self._pid_activated = True
-            self._publish_pid_activate()
+            self._publish_pid_activate(gen)
 
 
 def main(args=None) -> None:
