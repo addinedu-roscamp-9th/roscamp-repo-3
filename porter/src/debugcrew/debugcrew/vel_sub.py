@@ -233,6 +233,12 @@ class VelSub(Node):
             status = result.status
         except Exception as e:
             self.get_logger().error(f"Nav2 result callback error: {e}")
+            # Activate PID as best-effort fallback so the robot still attempts
+            # fine-positioning even when the Nav2 result future itself errored.
+            if self._target is not None:
+                self.get_logger().warn("Activating PID as fallback after Nav2 result error")
+                self._pid_activated = True
+                self._publish_pid_activate()
             return
 
         if status == GoalStatus.STATUS_SUCCEEDED:
@@ -241,10 +247,19 @@ class VelSub(Node):
             )
             self._pid_activated = True
             self._publish_pid_activate()
+        elif status == GoalStatus.STATUS_CANCELED:
+            # Goal was cancelled by us (new target arrived) — the new send_nav2_goal
+            # or publish_pid_activate path is already in flight; nothing to do here.
+            self.get_logger().info("Nav2 goal cancelled — new navigation already in progress")
         else:
+            # Nav2 aborted, failed, or returned an unexpected status.
+            # Fall through to PID so the robot still tries to reach the target
+            # rather than silently stopping.
             self.get_logger().warn(
-                f"Nav2 finished with non-success status: {status} — navigation failed"
+                f"Nav2 finished with status {status} — activating PID as fallback"
             )
+            self._pid_activated = True
+            self._publish_pid_activate()
 
 
 def main(args=None) -> None:

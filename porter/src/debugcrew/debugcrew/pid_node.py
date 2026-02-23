@@ -168,9 +168,16 @@ class PidNode(Node):
 
     def _activate_cb(self, msg: PorterTarget) -> None:
         """Start PID control toward the given target."""
-        self.get_logger().info(
-            f"PID activated: target x={msg.x:.4f}, y={msg.y:.4f}, yaw={msg.yaw:.4f}"
-        )
+        if self._mode != "IDLE":
+            self.get_logger().info(
+                f"PID re-activated from {self._mode} — resetting for new target "
+                f"x={msg.x:.4f}, y={msg.y:.4f}, yaw={msg.yaw:.4f}"
+            )
+        else:
+            self.get_logger().info(
+                f"PID activated: target x={msg.x:.4f}, y={msg.y:.4f}, yaw={msg.yaw:.4f}"
+            )
+        self._publish_stop()   # Ensure robot is stopped before starting fresh
         self._target = msg
         self._mode = "PID_POS"
         self._lin_pid.reset()
