@@ -3,9 +3,11 @@ import math
 import rclpy as rp
 from action_msgs.msg import GoalStatus
 from debugcrew_msgs.msg import PorterTarget
+from geometry_msgs.msg import PoseWithCovarianceStamped
 from nav2_msgs.action import NavigateToPose
-from rclpy.action import ActionClient
+from rclpy.action.client import ActionClient
 from rclpy.node import Node
+from rclpy.qos import QoSDurabilityPolicy, QoSProfile, QoSReliabilityPolicy
 
 
 # Distance (metres) at which Nav2 is cancelled and PID takes over
@@ -27,9 +29,23 @@ class VelSub(Node):
         self._goal_handle = None
         self._target: PorterTarget | None = None
         self._pid_activated = False
+        self._current_pose: tuple[float, float, float] | None = None  # (x, y, yaw)
 
         # Nav2 action client
         self._nav_client = ActionClient(self, NavigateToPose, "navigate_to_pose")
+
+        # /amcl_pose is latched — use transient_local so we get the last pose
+        # immediately on subscribe even if AMCL hasn't published a new one recently.
+        amcl_qos = QoSProfile(
+            depth=1,
+            reliability=QoSReliabilityPolicy.RELIABLE,
+            durability=QoSDurabilityPolicy.TRANSIENT_LOCAL,
+        )
+
+        # Subscribe to AMCL pose for proximity check
+        self._pose_sub = self.create_subscription(
+            PoseWithCovarianceStamped, "/amcl_pose", self._amcl_cb, amcl_qos
+        )
 
         # Subscribe to target commands from the server
         self._target_sub = self.create_subscription(
@@ -42,6 +58,19 @@ class VelSub(Node):
         self.get_logger().info("vel_sub started — waiting for /porter_target")
 
     # ------------------------------------------------------------------
+    # AMCL pose — kept up to date for proximity check
+    # ------------------------------------------------------------------
+
+    def _amcl_cb(self, msg: PoseWithCovarianceStamped) -> None:
+        """Update current pose from AMCL localisation."""
+        p = msg.pose.pose
+        q = p.orientation
+        siny_cosp = 2.0 * (q.w * q.z + q.x * q.y)
+        cosy_cosp = 1.0 - 2.0 * (q.y * q.y + q.z * q.z)
+        yaw = math.atan2(siny_cosp, cosy_cosp)
+        self._current_pose = (float(p.position.x), float(p.position.y), yaw)
+
+    # ------------------------------------------------------------------
     # Target received from server
     # ------------------------------------------------------------------
 
@@ -52,6 +81,29 @@ class VelSub(Node):
         )
         self._target = msg
         self._pid_activated = False
+
+        # If the goal is already within PID range, skip Nav2 entirely and go
+        # straight to PID. This handles goals that are very close (< 5 cm) where
+        # Nav2 may reject or never reach the SWITCH_DISTANCE feedback threshold.
+        if self._current_pose is not None:
+            dx = float(msg.x) - self._current_pose[0]
+            dy = float(msg.y) - self._current_pose[1]
+            dist = math.sqrt(dx * dx + dy * dy)
+            if dist <= SWITCH_DISTANCE:
+                self.get_logger().info(
+                    f"Goal is {dist:.3f} m away (≤ {SWITCH_DISTANCE} m) "
+                    "— skipping Nav2, activating PID directly"
+                )
+                # Cancel any in-flight Nav2 goal first
+                if self._goal_handle is not None:
+                    self.get_logger().info("Cancelling previous Nav2 goal")
+                    cancel_future = self._goal_handle.cancel_goal_async()
+                    cancel_future.add_done_callback(lambda _: self._publish_pid_activate())
+                    self._goal_handle = None
+                else:
+                    self._pid_activated = True
+                    self._publish_pid_activate()
+                return
 
         # Cancel any in-flight Nav2 goal before issuing a new one
         if self._goal_handle is not None:
@@ -100,7 +152,12 @@ class VelSub(Node):
             return
 
         if not goal_handle.accepted:
-            self.get_logger().warn("Nav2 goal rejected")
+            self.get_logger().warn(
+                "Nav2 goal rejected — goal is likely too close; activating PID directly"
+            )
+            if not self._pid_activated and self._target is not None:
+                self._pid_activated = True
+                self._publish_pid_activate()
             return
 
         self.get_logger().info("Nav2 goal accepted")
@@ -173,7 +230,13 @@ class VelSub(Node):
             self._pid_activated = True
             self._publish_pid_activate()
         else:
-            self.get_logger().warn(f"Nav2 finished with non-success status: {status}")
+            self.get_logger().warn(
+                f"Nav2 finished with non-success status: {status} "
+                "— activating PID as fallback"
+            )
+            if not self._pid_activated and self._target is not None:
+                self._pid_activated = True
+                self._publish_pid_activate()
 
 
 def main(args=None) -> None:

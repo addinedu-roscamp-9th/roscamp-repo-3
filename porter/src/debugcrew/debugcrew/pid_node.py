@@ -20,6 +20,7 @@ import rclpy
 from debugcrew_msgs.msg import PorterStatus, PorterTarget
 from geometry_msgs.msg import PoseWithCovarianceStamped, Twist
 from rclpy.node import Node
+from rclpy.qos import QoSDurabilityPolicy, QoSProfile, QoSReliabilityPolicy
 
 # ---------------------------------------------------------------------------
 # Tolerances and gains
@@ -127,9 +128,17 @@ class PidNode(Node):
             output_min=MIN_ANG, output_max=MAX_ANG,
         )
 
+        # /amcl_pose is latched — use transient_local so we get the last pose
+        # immediately on subscribe even if AMCL hasn't published a new one yet.
+        amcl_qos = QoSProfile(
+            depth=1,
+            reliability=QoSReliabilityPolicy.RELIABLE,
+            durability=QoSDurabilityPolicy.TRANSIENT_LOCAL,
+        )
+
         # Subscriptions
         self._pose_sub = self.create_subscription(
-            PoseWithCovarianceStamped, "/amcl_pose", self._amcl_cb, 10
+            PoseWithCovarianceStamped, "/amcl_pose", self._amcl_cb, amcl_qos
         )
         self._activate_sub = self.create_subscription(
             PorterTarget, "/pid_activate", self._activate_cb, 10
