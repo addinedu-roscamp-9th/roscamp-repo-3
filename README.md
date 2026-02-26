@@ -81,25 +81,30 @@ ROS2와 AI를 활용한 자율주행 로봇개발자 부트캠프 3팀 저장소
 ---
 
 ## Scenario
-![alt text](archive/image.png)
-
-
+![Fetch](archive/fetch.png)
 ![alt text](archive/bring.png)
 
 ---
 ## Database
+![alt text](archive/DB_01.png)
 
 ---
 
 ## Server
+![alt text](archive/state_diagram.png)
 
 ---
 
 ## AI
+![alt text](archive/roboflow.png)
+![alt text](archive/pipeline.png)
 
 ---
 
 ## GUI
+![alt text](archive/gui_01.png)
+![alt text](archive/gui_02.png)
+![alt text](archive/gui_03.png)
 
 ---
 
